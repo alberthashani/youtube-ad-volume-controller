@@ -1,6 +1,6 @@
 var extensionEnabled = false; // Default state
 var originalVolume = null; // Store the original volume
-let devModeEnabled = true;
+let devModeEnabled = true; // Show panel through keyboard shortcut (Ctrl+Shift+D)
 let devPanel = null;
 
 // Listen for messages from the popup
@@ -74,15 +74,24 @@ function createDevPanel() {
   document.body.appendChild(devPanel);
 }
 
+// Update the updateDevPanel function in content.js
 function updateDevPanel() {
   if (!devPanel) return;
   const videoPlayer = document.querySelector('video');
-  devPanel.innerHTML = `
-    <div>Dev Mode Active</div>
-    <div>Current Volume: ${videoPlayer ? videoPlayer.volume * 100 : 0}%</div>
-    <div>Original Volume: ${originalVolume ? originalVolume * 100 : 'N/A'}%</div>
-    <div>Extension Enabled: ${extensionEnabled}</div>
-  `;
+  
+  // Get slider volume from popup
+  chrome.runtime.sendMessage({ action: MessageAction.GET_SLIDER_VOLUME }, function(response) {
+    const sliderVolume = response && response.sliderVolume !== undefined ? 
+      Math.round(response.sliderVolume * 100) : 'N/A';
+    
+    devPanel.innerHTML = `
+      <div>Dev Mode Active</div>
+      <div>Current Volume: ${videoPlayer ? Math.round(videoPlayer.volume * 100) : 0}%</div>
+      <div>Original Volume: ${originalVolume ? Math.round(originalVolume * 100) : 'N/A'}%</div>
+      <div>Slider Volume: ${sliderVolume}%</div>
+      <div>Extension Enabled: ${extensionEnabled}</div>
+    `;
+  });
 }
 
 // Add keyboard shortcut listener
