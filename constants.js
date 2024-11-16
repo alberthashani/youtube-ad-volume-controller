@@ -1,9 +1,9 @@
 const MessageAction = {
   GET_VOLUME: 'getVolume',
   SET_VOLUME: 'setVolume',
-  ENABLE_EXTENSION: 'enableExtension',
-  DISABLE_EXTENSION: 'disableExtension',
-  GET_EXTENSION_STATE: 'getExtensionState',
+  ENABLE_AD_VOLUME_CONTROLLER: 'enableAdVolumeController',
+  DISABLE_AD_VOLUME_CONTROLLER: 'disableAdVolumeController',
+  GET_AVC_STATE: 'getAVCState',
   GET_SLIDER_VOLUME: 'getSliderVolume'
 };
 

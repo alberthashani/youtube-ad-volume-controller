@@ -20,7 +20,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       }
       break;
       
-    case MessageAction.ENABLE_EXTENSION:
+    case MessageAction.ENABLE_AD_VOLUME_CONTROLLER:
       console.log('Extension enabled');
       if (videoPlayer) {
         originalVolume = videoPlayer.volume;
@@ -35,7 +35,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       sendResponse({ originalVolume: originalVolume });
       break;
       
-    case MessageAction.DISABLE_EXTENSION:
+    case MessageAction.DISABLE_AD_VOLUME_CONTROLLER:
       console.log('Extension disabled');
       if (videoPlayer && originalVolume !== null) {
         videoPlayer.volume = originalVolume;
@@ -45,7 +45,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       console.log('Extension disabled, restored volume');
       break;
       
-    case MessageAction.GET_EXTENSION_STATE:
+    case MessageAction.GET_AVC_STATE:
       console.log('Sending extension state:', extensionEnabled);
       sendResponse({ isEnabled: extensionEnabled });
       break;
@@ -60,7 +60,7 @@ function createDevPanel() {
   devPanel.id = 'yt-volume-control-dev-panel';
   devPanel.style.cssText = `
     position: fixed;
-    top: 20px;
+    bottom: 20px;
     right: 20px;
     background: rgba(0, 0, 0, 0.8);
     color: #fff;
@@ -68,6 +68,7 @@ function createDevPanel() {
     border-radius: 5px;
     z-index: 9999;
     font-family: monospace;
+    font-size: 14px;
   `;
   
   updateDevPanel();

@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
   var volumeSlider = document.getElementById('volumeSlider');
   var volumeLabel = document.getElementById('volumeLabel');
-  var enableExtensionCheckbox = document.getElementById('enableExtension');
+  var enableAdVolumeControllerCheckbox = document.getElementById('enableAdVolumeController');
   var controls = document.getElementById('controls');
   var notYouTubeMessage = document.getElementById('notYouTubeMessage');
   var originalVolumeLabel = document.getElementById('originalVolumeLabel');
@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function () {
     volumeSlider.addEventListener('input', function () {
       var desiredVolume = volumeSlider.value;
       updateVolumeLabel(desiredVolume);
-      if (enableExtensionCheckbox.checked) {
+      if (enableAdVolumeControllerCheckbox.checked) {
         chrome.tabs.sendMessage(activeTab.id, { 
           action: MessageAction.SET_VOLUME, 
           volume: desiredVolume 
@@ -50,10 +50,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Add an event listener to the checkbox to enable/disable the extension
-    enableExtensionCheckbox.addEventListener('change', function () {
-      var isEnabled = enableExtensionCheckbox.checked;
+    enableAdVolumeControllerCheckbox.addEventListener('change', function () {
+      var isEnabled = enableAdVolumeControllerCheckbox.checked;
       chrome.tabs.sendMessage(activeTab.id, { 
-        action: isEnabled ? MessageAction.ENABLE_EXTENSION : MessageAction.DISABLE_EXTENSION 
+        action: isEnabled ? MessageAction.ENABLE_AD_VOLUME_CONTROLLER : MessageAction.DISABLE_AD_VOLUME_CONTROLLER 
       }, function(response) {
         if (isEnabled && response && response.originalVolume !== undefined) {
           originalVolumeValue.textContent = Math.round(response.originalVolume * 100) + '%';
@@ -69,9 +69,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Initialize the checkbox state
-    chrome.tabs.sendMessage(activeTab.id, { action: MessageAction.GET_EXTENSION_STATE }, function (response) {
+    chrome.tabs.sendMessage(activeTab.id, { action: MessageAction.GET_AVC_STATE }, function (response) {
       if (response && response.isEnabled !== undefined) {
-        enableExtensionCheckbox.checked = response.isEnabled;
+        enableAdVolumeControllerCheckbox.checked = response.isEnabled;
       }
     });
   });
