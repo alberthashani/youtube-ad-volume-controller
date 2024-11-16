@@ -1,5 +1,7 @@
 var extensionEnabled = false; // Default state
 var originalVolume = null; // Store the original volume
+let devModeEnabled = true;
+let devPanel = null;
 
 // Listen for messages from the popup
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
@@ -47,5 +49,53 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       console.log('Sending extension state:', extensionEnabled);
       sendResponse({ isEnabled: extensionEnabled });
       break;
+  }
+  updateDevPanel(); // Add this at the end of each case
+});
+
+function createDevPanel() {
+  if (devPanel) return;
+  
+  devPanel = document.createElement('div');
+  devPanel.id = 'yt-volume-control-dev-panel';
+  devPanel.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 9999;
+    font-family: monospace;
+  `;
+  
+  updateDevPanel();
+  document.body.appendChild(devPanel);
+}
+
+function updateDevPanel() {
+  if (!devPanel) return;
+  const videoPlayer = document.querySelector('video');
+  devPanel.innerHTML = `
+    <div>Dev Mode Active</div>
+    <div>Current Volume: ${videoPlayer ? videoPlayer.volume * 100 : 0}%</div>
+    <div>Original Volume: ${originalVolume ? originalVolume * 100 : 'N/A'}%</div>
+    <div>Extension Enabled: ${extensionEnabled}</div>
+  `;
+}
+
+// Add keyboard shortcut listener
+document.addEventListener('keydown', function(e) {
+  // Ctrl+Shift+D to toggle dev panel
+  if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+    if (devPanel) {
+      devPanel.remove();
+      devPanel = null;
+    } else {
+      createDevPanel();
+      // Update panel every second
+      setInterval(updateDevPanel, 1000);
+    }
   }
 });
