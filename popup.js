@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', function () {
   var enableExtensionCheckbox = document.getElementById('enableExtension');
   var controls = document.getElementById('controls');
   var notYouTubeMessage = document.getElementById('notYouTubeMessage');
+  var originalVolumeLabel = document.getElementById('originalVolumeLabel');
+  var originalVolumeValue = document.getElementById('originalVolumeValue');
 
   function updateVolumeLabel(volume) {
     volumeLabel.textContent = Math.round(volume * 100) + '%';
@@ -52,6 +54,13 @@ document.addEventListener('DOMContentLoaded', function () {
       var isEnabled = enableExtensionCheckbox.checked;
       chrome.tabs.sendMessage(activeTab.id, { 
         action: isEnabled ? MessageAction.ENABLE_EXTENSION : MessageAction.DISABLE_EXTENSION 
+      }, function(response) {
+        if (isEnabled && response && response.originalVolume !== undefined) {
+          originalVolumeValue.textContent = Math.round(response.originalVolume * 100) + '%';
+          originalVolumeLabel.style.display = 'block';
+        } else {
+          originalVolumeLabel.style.display = 'none';
+        }
       });
       
       if (isEnabled) {

@@ -30,6 +30,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       }
       extensionEnabled = true;
       console.log('Extension enabled, original volume:', originalVolume);
+      sendResponse({ originalVolume: originalVolume });
       break;
       
     case MessageAction.DISABLE_EXTENSION:
