@@ -32,6 +32,11 @@ document.addEventListener('DOMContentLoaded', function () {
     enableExtensionCheckbox.addEventListener('change', function () {
       var isEnabled = enableExtensionCheckbox.checked;
       chrome.tabs.sendMessage(activeTab.id, { action: isEnabled ? 'enableExtension' : 'disableExtension' });
+      
+      if (isEnabled) {
+        var desiredVolume = volumeSlider.value;
+        chrome.tabs.sendMessage(activeTab.id, { action: 'setVolume', volume: desiredVolume });
+      }
     });
 
     // Initialize the checkbox state
