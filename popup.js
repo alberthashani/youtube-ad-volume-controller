@@ -2,6 +2,8 @@ document.addEventListener('DOMContentLoaded', function () {
   var volumeSlider = document.getElementById('volumeSlider');
   var volumeLabel = document.getElementById('volumeLabel');
   var enableExtensionCheckbox = document.getElementById('enableExtension');
+  var controls = document.getElementById('controls');
+  var notYouTubeMessage = document.getElementById('notYouTubeMessage');
 
   function updateVolumeLabel(volume) {
     volumeLabel.textContent = Math.round(volume * 100) + '%';
@@ -17,6 +19,13 @@ document.addEventListener('DOMContentLoaded', function () {
   // Get the current tab
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     var activeTab = tabs[0];
+
+    // Check if current tab is YouTube
+    if (!activeTab.url.includes('youtube.com')) {
+      controls.classList.add('disabled');
+      notYouTubeMessage.style.display = 'block';
+      return;
+    }
 
     // Send a message to the content script to get the current volume
     chrome.tabs.sendMessage(activeTab.id, { action: MessageAction.GET_VOLUME }, function (response) {

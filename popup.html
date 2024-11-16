@@ -11,15 +11,27 @@
     input[type="range"] {
       width: 100%;
     }
+    .disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    #notYouTubeMessage {
+      color: #666;
+      font-style: italic;
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <h3>Ad Volume</h3>
-  <input type="range" id="volumeSlider" min="0" max="1" step="0.01">
-  <p>Volume: <span id="volumeLabel">0%</span></p>
-  <label>
-    <input type="checkbox" id="enableExtension"> Enable Extension
-  </label>
+  <div id="controls">
+    <h3>Ad Volume</h3>
+    <input type="range" id="volumeSlider" min="0" max="1" step="0.01">
+    <p>Volume: <span id="volumeLabel">0%</span></p>
+    <label>
+      <input type="checkbox" id="enableExtension"> Enable Extension
+    </label>
+  </div>
+  <p id="notYouTubeMessage">Extension only works on YouTube</p>
   <script src="constants.js"></script>
   <script src="popup.js"></script>
 </body>
