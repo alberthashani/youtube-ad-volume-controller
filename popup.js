@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
 
-    // Add an event listener to the checkbox to enable/disable the extension
+    // Add an event listener to the checkbox to enable/disable the Ad Volume Controller
     enableAdVolumeControllerCheckbox.addEventListener('change', function () {
       var isEnabled = enableAdVolumeControllerCheckbox.checked;
       chrome.tabs.sendMessage(activeTab.id, { 
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function () {
       });
       
       if (isEnabled) {
-        console.log('Extension enabled, slider volume:', volumeSlider.value);
+        console.log('Ad Volume Controller enabled, slider volume:', volumeSlider.value);
       }
     });
 

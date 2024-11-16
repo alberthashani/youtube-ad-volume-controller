@@ -1,4 +1,4 @@
-var extensionEnabled = false; // Default state
+var adVolumeController = false; // Default state
 var originalVolume = null; // Store the original volume
 let devModeEnabled = true; // Show panel through keyboard shortcut (Ctrl+Shift+D)
 let devPanel = null;
@@ -14,14 +14,14 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       break;
       
     case MessageAction.SET_VOLUME:
-      if (videoPlayer && extensionEnabled) {
+      if (videoPlayer && adVolumeController) {
         console.log('Setting volume:', request.volume);
         videoPlayer.volume = request.volume;
       }
       break;
       
     case MessageAction.ENABLE_AD_VOLUME_CONTROLLER:
-      console.log('Extension enabled');
+      console.log('Ad Volume Controller enabled');
       if (videoPlayer) {
         originalVolume = videoPlayer.volume;
         chrome.runtime.sendMessage({ action: MessageAction.GET_SLIDER_VOLUME }, function(response) {
@@ -30,24 +30,24 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
           }
         });
       }
-      extensionEnabled = true;
-      console.log('Extension enabled, original volume:', originalVolume);
+      adVolumeController = true;
+      console.log('Ad Volume Controller enabled, original volume:', originalVolume);
       sendResponse({ originalVolume: originalVolume });
       break;
       
     case MessageAction.DISABLE_AD_VOLUME_CONTROLLER:
-      console.log('Extension disabled');
+      console.log('Ad Volume Controller disabled');
       if (videoPlayer && originalVolume !== null) {
         videoPlayer.volume = originalVolume;
         originalVolume = null;
       }
-      extensionEnabled = false;
-      console.log('Extension disabled, restored volume');
+      adVolumeController = false;
+      console.log('Ad Volume Controller disabled, restored volume');
       break;
       
     case MessageAction.GET_AVC_STATE:
-      console.log('Sending extension state:', extensionEnabled);
-      sendResponse({ isEnabled: extensionEnabled });
+      console.log('Sending Ad Volume Controller state:', adVolumeController);
+      sendResponse({ isEnabled: adVolumeController });
       break;
   }
   updateDevPanel(); // Add this at the end of each case
@@ -90,7 +90,7 @@ function updateDevPanel() {
       <div>Current Volume: ${videoPlayer ? Math.round(videoPlayer.volume * 100) : 0}%</div>
       <div>Original Volume: ${originalVolume ? Math.round(originalVolume * 100) : 'N/A'}%</div>
       <div>Slider Volume: ${sliderVolume}%</div>
-      <div>Extension Enabled: ${extensionEnabled}</div>
+      <div>Ad Volume Controller Enabled: ${adVolumeController}</div>
     `;
   });
 }
