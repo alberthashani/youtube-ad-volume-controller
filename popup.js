@@ -7,6 +7,13 @@ document.addEventListener('DOMContentLoaded', function () {
     volumeLabel.textContent = Math.round(volume * 100) + '%';
   }
 
+  // Listen for getSliderVolume requests from content script
+  chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === 'getSliderVolume') {
+      sendResponse({ sliderVolume: volumeSlider.value });
+    }
+  });
+
   // Get the current tab
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     var activeTab = tabs[0];
@@ -31,11 +38,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // Add an event listener to the checkbox to enable/disable the extension
     enableExtensionCheckbox.addEventListener('change', function () {
       var isEnabled = enableExtensionCheckbox.checked;
-      chrome.tabs.sendMessage(activeTab.id, { action: isEnabled ? 'enableExtension' : 'disableExtension' });
+      chrome.tabs.sendMessage(activeTab.id, { 
+        action: isEnabled ? 'enableExtension' : 'disableExtension' 
+      });
       
       if (isEnabled) {
-        var desiredVolume = volumeSlider.value;
-        chrome.tabs.sendMessage(activeTab.id, { action: 'setVolume', volume: desiredVolume });
+        console.log('Extension enabled, slider volume:', volumeSlider.value);
       }
     });
 
