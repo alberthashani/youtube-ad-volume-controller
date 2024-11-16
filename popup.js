@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Listen for getSliderVolume requests from content script
   chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    if (request.action === 'getSliderVolume') {
+    if (request.action === MessageAction.GET_SLIDER_VOLUME) {
       sendResponse({ sliderVolume: volumeSlider.value });
     }
   });
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var activeTab = tabs[0];
 
     // Send a message to the content script to get the current volume
-    chrome.tabs.sendMessage(activeTab.id, { action: 'getVolume' }, function (response) {
+    chrome.tabs.sendMessage(activeTab.id, { action: MessageAction.GET_VOLUME }, function (response) {
       if (response && response.volume !== undefined) {
         volumeSlider.value = response.volume;
         updateVolumeLabel(response.volume);
@@ -31,7 +31,10 @@ document.addEventListener('DOMContentLoaded', function () {
       var desiredVolume = volumeSlider.value;
       updateVolumeLabel(desiredVolume);
       if (enableExtensionCheckbox.checked) {
-        chrome.tabs.sendMessage(activeTab.id, { action: 'setVolume', volume: desiredVolume });
+        chrome.tabs.sendMessage(activeTab.id, { 
+          action: MessageAction.SET_VOLUME, 
+          volume: desiredVolume 
+        });
       }
     });
 
@@ -39,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
     enableExtensionCheckbox.addEventListener('change', function () {
       var isEnabled = enableExtensionCheckbox.checked;
       chrome.tabs.sendMessage(activeTab.id, { 
-        action: isEnabled ? 'enableExtension' : 'disableExtension' 
+        action: isEnabled ? MessageAction.ENABLE_EXTENSION : MessageAction.DISABLE_EXTENSION 
       });
       
       if (isEnabled) {
@@ -48,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Initialize the checkbox state
-    chrome.tabs.sendMessage(activeTab.id, { action: 'getExtensionState' }, function (response) {
+    chrome.tabs.sendMessage(activeTab.id, { action: MessageAction.GET_EXTENSION_STATE }, function (response) {
       if (response && response.isEnabled !== undefined) {
         enableExtensionCheckbox.checked = response.isEnabled;
       }

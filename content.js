@@ -6,23 +6,23 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   var videoPlayer = document.querySelector('video');
 
   switch (request.action) {
-    case 'getVolume':
+    case MessageAction.GET_VOLUME:
       console.log('Sending current volume:', videoPlayer ? videoPlayer.volume : 0);
       sendResponse({ volume: videoPlayer ? videoPlayer.volume : 0 });
       break;
       
-    case 'setVolume':
+    case MessageAction.SET_VOLUME:
       if (videoPlayer && extensionEnabled) {
         console.log('Setting volume:', request.volume);
         videoPlayer.volume = request.volume;
       }
       break;
       
-    case 'enableExtension':
+    case MessageAction.ENABLE_EXTENSION:
       console.log('Extension enabled');
       if (videoPlayer) {
         originalVolume = videoPlayer.volume;
-        chrome.runtime.sendMessage({ action: 'getSliderVolume' }, function(response) {
+        chrome.runtime.sendMessage({ action: MessageAction.GET_SLIDER_VOLUME }, function(response) {
           if (response && response.sliderVolume !== undefined) {
             videoPlayer.volume = response.sliderVolume;
           }
@@ -32,7 +32,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       console.log('Extension enabled, original volume:', originalVolume);
       break;
       
-    case 'disableExtension':
+    case MessageAction.DISABLE_EXTENSION:
       console.log('Extension disabled');
       if (videoPlayer && originalVolume !== null) {
         videoPlayer.volume = originalVolume;
@@ -42,7 +42,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       console.log('Extension disabled, restored volume');
       break;
       
-    case 'getExtensionState':
+    case MessageAction.GET_EXTENSION_STATE:
       console.log('Sending extension state:', extensionEnabled);
       sendResponse({ isEnabled: extensionEnabled });
       break;
