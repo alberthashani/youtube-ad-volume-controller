@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
   var volumeSlider = document.getElementById('volumeSlider');
   var volumeLabel = document.getElementById('volumeLabel');
+  var enableExtensionCheckbox = document.getElementById('enableExtension');
 
   function updateVolumeLabel(volume) {
     volumeLabel.textContent = Math.round(volume * 100) + '%';
@@ -18,11 +19,26 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
 
-    // Add an event listener to the slider to send the new volume to the content script
+    // Add an event listener to the slider to update the volume label and send the new volume if enabled
     volumeSlider.addEventListener('input', function () {
       var desiredVolume = volumeSlider.value;
       updateVolumeLabel(desiredVolume);
-      chrome.tabs.sendMessage(activeTab.id, { action: 'setVolume', volume: desiredVolume });
+      if (enableExtensionCheckbox.checked) {
+        chrome.tabs.sendMessage(activeTab.id, { action: 'setVolume', volume: desiredVolume });
+      }
+    });
+
+    // Add an event listener to the checkbox to enable/disable the extension
+    enableExtensionCheckbox.addEventListener('change', function () {
+      var isEnabled = enableExtensionCheckbox.checked;
+      chrome.tabs.sendMessage(activeTab.id, { action: isEnabled ? 'enableExtension' : 'disableExtension' });
+    });
+
+    // Initialize the checkbox state
+    chrome.tabs.sendMessage(activeTab.id, { action: 'getExtensionState' }, function (response) {
+      if (response && response.isEnabled !== undefined) {
+        enableExtensionCheckbox.checked = response.isEnabled;
+      }
     });
   });
 });
