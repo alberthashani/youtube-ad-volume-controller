@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>YouTube Volume Control</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      width: 200px;
+      padding: 10px;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h3>Volume Control</h3>
+  <input type="range" id="volumeSlider" min="0" max="1" step="0.01">
+  <p>Volume: <span id="volumeLabel">0%</span></p>
+  <script src="popup.js"></script>
+</body>
+</html>
