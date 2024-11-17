@@ -2,8 +2,8 @@ let devModeEnabled = true; // Show panel through keyboard shortcut (Ctrl+Shift+D
 let devPanel = null;
 let playerElement = null;
 let adPlaying = false;
-let videoVolume = 0.5; // Default video volume
-let adVolume = 0.1; // Default ad volume
+let savedVolume = null; // Store original volume when ad starts
+let adVolume = 0.05; // Default ad volume
 
 // Listen for messages from the popup
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
@@ -11,14 +11,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
   switch (request.action) {
     case MessageAction.GET_VOLUMES:
-      sendResponse({ videoVolume: videoVolume, adVolume: adVolume });
-      break;
-
-    case MessageAction.SET_VIDEO_VOLUME:
-      videoVolume = request.volume;
-      if (videoPlayer && !adPlaying) {
-        setVolume(videoPlayer, videoVolume);
-      }
+      sendResponse({ adVolume: adVolume });
       break;
 
     case MessageAction.SET_AD_VOLUME:
@@ -70,14 +63,16 @@ function checkAd() {
     adPlaying = true;
     console.log('Ad started. Setting volume to ad volume');
     if (videoPlayer) {
+      savedVolume = videoPlayer.volume; // Save current volume
       setVolume(videoPlayer, adVolume);
     }
   } else if (!isAdShowing && adPlaying) {
     // Ad has ended
     adPlaying = false;
     console.log('Ad ended. Restoring video volume');
-    if (videoPlayer) {
-      setVolume(videoPlayer, videoVolume);
+    if (videoPlayer && savedVolume !== null) {
+      setVolume(videoPlayer, savedVolume);
+      savedVolume = null;
     }
   }
 }
@@ -142,7 +137,6 @@ function updateDevPanel() {
   devPanel.innerHTML = `
     <div>Dev Mode Active</div>
     <div>Current Volume: ${videoPlayer ? Math.round(videoPlayer.volume * 100) : 0}%</div>
-    <div>Video Volume: ${Math.round(videoVolume * 100)}%</div>
     <div>Ad Volume: ${Math.round(adVolume * 100)}%</div>
   `;
 }
