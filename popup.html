@@ -20,18 +20,21 @@
       font-style: italic;
       display: none;
     }
-
+    .volume-control {
+      margin-bottom: 15px;
+    }
   </style>
 </head>
 <body>
   <div id="controls">
-    <label>
-      <input type="checkbox" id="enableAdVolumeController"> Enable ad volume controller
-    </label>
-    <h3>Ad Volume</h3>
-    <input type="range" id="volumeSlider" min="0" max="1" step="0.01">
-    <p>Volume: <span id="volumeLabel">0%</span></p>
-    <p id="originalVolumeLabel" style="display: none;">Original Volume: <span id="originalVolumeValue">0%</span></p>
+    <div class="volume-control">
+      <h3>Video Volume <span id="videoVolumeLabel">0%</span></p></h3>
+      <input type="range" id="videoVolumeSlider" min="0" max="1" step="0.01">
+    </div>
+    <div class="volume-control">
+      <h3>Ad Volume <span id="adVolumeLabel">0%</span></h3>
+      <input type="range" id="adVolumeSlider" min="0" max="1" step="0.01">
+    </div>
   </div>
   <p id="notYouTubeMessage">Extension only works on YouTube</p>
   <script src="constants.js"></script>

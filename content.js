@@ -1,57 +1,116 @@
-var adVolumeController = false; // Default state
-var originalVolume = null; // Store the original volume
 let devModeEnabled = true; // Show panel through keyboard shortcut (Ctrl+Shift+D)
 let devPanel = null;
+let playerElement = null;
+let adPlaying = false;
+let videoVolume = 0.5; // Default video volume
+let adVolume = 0.1; // Default ad volume
 
 // Listen for messages from the popup
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   var videoPlayer = document.querySelector('video');
 
   switch (request.action) {
-    case MessageAction.GET_VOLUME:
-      console.log('Sending current volume:', videoPlayer ? videoPlayer.volume : 0);
-      sendResponse({ volume: videoPlayer ? videoPlayer.volume : 0 });
+    case MessageAction.GET_VOLUMES:
+      sendResponse({ videoVolume: videoVolume, adVolume: adVolume });
       break;
-      
-    case MessageAction.SET_VOLUME:
-      if (videoPlayer && adVolumeController) {
-        console.log('Setting volume:', request.volume);
-        videoPlayer.volume = request.volume;
+
+    case MessageAction.SET_VIDEO_VOLUME:
+      videoVolume = request.volume;
+      if (videoPlayer && !adPlaying) {
+        setVolume(videoPlayer, videoVolume);
       }
       break;
-      
-    case MessageAction.ENABLE_AD_VOLUME_CONTROLLER:
-      console.log('Ad Volume Controller enabled');
-      if (videoPlayer) {
-        originalVolume = videoPlayer.volume;
-        chrome.runtime.sendMessage({ action: MessageAction.GET_SLIDER_VOLUME }, function(response) {
-          if (response && response.sliderVolume !== undefined) {
-            videoPlayer.volume = response.sliderVolume;
-          }
-        });
+
+    case MessageAction.SET_AD_VOLUME:
+      adVolume = request.volume;
+      if (videoPlayer && adPlaying) {
+        setVolume(videoPlayer, adVolume);
       }
-      adVolumeController = true;
-      console.log('Ad Volume Controller enabled, original volume:', originalVolume);
-      sendResponse({ originalVolume: originalVolume });
-      break;
-      
-    case MessageAction.DISABLE_AD_VOLUME_CONTROLLER:
-      console.log('Ad Volume Controller disabled');
-      if (videoPlayer && originalVolume !== null) {
-        videoPlayer.volume = originalVolume;
-        originalVolume = null;
-      }
-      adVolumeController = false;
-      console.log('Ad Volume Controller disabled, restored volume');
-      break;
-      
-    case MessageAction.GET_AVC_STATE:
-      console.log('Sending Ad Volume Controller state:', adVolumeController);
-      sendResponse({ isEnabled: adVolumeController });
       break;
   }
   updateDevPanel(); // Add this at the end of each case
 });
+
+// Function to set volume with synthetic event dispatching
+function setVolume(videoPlayer, volume) {
+  videoPlayer.volume = volume;
+  
+  // Dispatch synthetic events to simulate user interaction
+  const event = new Event('input', { bubbles: true });
+  videoPlayer.dispatchEvent(event);
+}
+
+// Function to check if an ad is playing
+function checkAd() {
+  console.log('Checking for ads...');
+
+  // Get the player element if not already obtained
+  if (!playerElement) {
+    playerElement = document.getElementById('movie_player');
+    if (!playerElement) {
+      console.log('Player element not found');
+      return;
+    } else {
+      console.log('Player element found');
+    }
+  }
+
+  // Get the video player element
+  var videoPlayer = document.querySelector('video');
+
+  // Check if the 'ad-showing' class is present on the player
+  let isAdShowing =
+    playerElement.classList.contains('ad-showing') ||
+    playerElement.classList.contains('ad-interrupting');
+
+  console.log('Ad showing:', isAdShowing);
+
+  if (isAdShowing && !adPlaying) {
+    // Ad has started
+    adPlaying = true;
+    console.log('Ad started. Setting volume to ad volume');
+    if (videoPlayer) {
+      setVolume(videoPlayer, adVolume);
+    }
+  } else if (!isAdShowing && adPlaying) {
+    // Ad has ended
+    adPlaying = false;
+    console.log('Ad ended. Restoring video volume');
+    if (videoPlayer) {
+      setVolume(videoPlayer, videoVolume);
+    }
+  }
+}
+
+// Observe changes to the 'class' attribute of the player element
+function init() {
+  playerElement = document.getElementById('movie_player');
+
+  if (playerElement) {
+    console.log('Player element found');
+
+    const observer = new MutationObserver(function (mutations) {
+      for (let mutation of mutations) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          console.log('Player class attribute changed');
+          checkAd();
+        }
+      }
+    });
+
+    observer.observe(playerElement, { attributes: true });
+    console.log('Observer attached to player element');
+
+    // Initial check in case the ad is already playing
+    checkAd();
+  } else {
+    console.log('Player element not found during initialization. Retrying...');
+    // Retry after a short delay
+    setTimeout(init, 1000);
+  }
+}
+
+init();
 
 function createDevPanel() {
   if (devPanel) return;
@@ -80,19 +139,12 @@ function updateDevPanel() {
   if (!devPanel) return;
   const videoPlayer = document.querySelector('video');
   
-  // Get slider volume from popup
-  chrome.runtime.sendMessage({ action: MessageAction.GET_SLIDER_VOLUME }, function(response) {
-    const sliderVolume = response && response.sliderVolume !== undefined ? 
-      Math.round(response.sliderVolume * 100) : 'N/A';
-    
-    devPanel.innerHTML = `
-      <div>Dev Mode Active</div>
-      <div>Current Volume: ${videoPlayer ? Math.round(videoPlayer.volume * 100) : 0}%</div>
-      <div>Original Volume: ${originalVolume ? Math.round(originalVolume * 100) : 'N/A'}%</div>
-      <div>Slider Volume: ${sliderVolume}%</div>
-      <div>Ad Volume Controller Enabled: ${adVolumeController}</div>
-    `;
-  });
+  devPanel.innerHTML = `
+    <div>Dev Mode Active</div>
+    <div>Current Volume: ${videoPlayer ? Math.round(videoPlayer.volume * 100) : 0}%</div>
+    <div>Video Volume: ${Math.round(videoVolume * 100)}%</div>
+    <div>Ad Volume: ${Math.round(adVolume * 100)}%</div>
+  `;
 }
 
 // Add keyboard shortcut listener

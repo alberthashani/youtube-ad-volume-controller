@@ -1,10 +1,7 @@
 const MessageAction = {
-  GET_VOLUME: 'getVolume',
-  SET_VOLUME: 'setVolume',
-  ENABLE_AD_VOLUME_CONTROLLER: 'enableAdVolumeController',
-  DISABLE_AD_VOLUME_CONTROLLER: 'disableAdVolumeController',
-  GET_AVC_STATE: 'getAVCState',
-  GET_SLIDER_VOLUME: 'getSliderVolume'
+  GET_VOLUMES: 'getVolumes',
+  SET_VIDEO_VOLUME: 'setVideoVolume',
+  SET_AD_VOLUME: 'setAdVolume'
 };
 
 // Make it available to other scripts
