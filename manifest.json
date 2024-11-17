@@ -4,7 +4,6 @@
   "version": "1.0",
   "description": "Control YouTube ad volume from a popup.",
   "permissions": [
-    "tabs",
     "storage"
   ],
   "host_permissions": [

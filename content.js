@@ -145,6 +145,7 @@ function updateDevPanel() {
     <div>Dev Mode Active</div>
     <div>Current Volume: ${videoPlayer ? Math.round(videoPlayer.volume * 100) : 0}%</div>
     <div>Ad Volume: ${Math.round(adVolume * 100)}%</div>
+    <div>Saved Volume: ${Math.round(savedVolume * 100)}%</div>
   `;
 }
 
