@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "YouTube Volume Control",
+  "name": "YouTube Ad Volume Controller",
   "version": "1.0",
-  "description": "Control YouTube video volume from a popup.",
+  "description": "Control YouTube ad volume from a popup.",
   "permissions": [
     "tabs",
     "storage"
