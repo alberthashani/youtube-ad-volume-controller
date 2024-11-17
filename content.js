@@ -5,6 +5,14 @@ let adPlaying = false;
 let savedVolume = null; // Store original volume when ad starts
 let adVolume = 0.05; // Default ad volume
 
+// Load saved ad volume when script initializes
+chrome.storage.sync.get(['adVolume'], function(result) {
+  if (result.adVolume !== undefined) {
+    adVolume = result.adVolume;
+    updateDevPanel();
+  }
+});
+
 // Listen for messages from the popup
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   var videoPlayer = document.querySelector('video');
@@ -16,6 +24,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
     case MessageAction.SET_AD_VOLUME:
       adVolume = request.volume;
+      // Save the new ad volume
+      chrome.storage.sync.set({ adVolume: adVolume });
       if (videoPlayer && adPlaying) {
         setVolume(videoPlayer, adVolume);
       }

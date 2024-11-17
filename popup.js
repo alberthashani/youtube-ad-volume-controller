@@ -10,6 +10,14 @@ document.addEventListener('DOMContentLoaded', function () {
     label.textContent = Math.round(slider.value * 100) + '%';
   }
 
+  // Load saved ad volume first
+  chrome.storage.sync.get(['adVolume'], function(result) {
+    if (result.adVolume !== undefined) {
+      adVolumeSlider.value = result.adVolume;
+      updateVolumeLabel(adVolumeSlider, adVolumeLabel);
+    }
+  });
+
   // Get the current tab
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     var activeTab = tabs[0];
