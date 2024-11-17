@@ -10,6 +10,10 @@ A Chrome extension that automatically controls the volume of YouTube ads while m
 - 🖥️ Simple, clean popup interface
 - 📊 Development panel for real-time volume monitoring (Ctrl+Shift+D)
 
+## Popup User Interface
+
+![Popup Interface](images/popup.png)
+
 ## Installation
 
 1. Clone this repository
