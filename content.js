@@ -52,28 +52,41 @@ function checkAd() {
       return;
     }
   }
-  // Get the video player element
+
   var videoPlayer = document.querySelector('video');
-  // Check if the 'ad-showing' class is present on the player
+  
+  // Check if any type of ad is showing
   let isAdShowing =
     playerElement.classList.contains('ad-showing') ||
     playerElement.classList.contains('ad-interrupting');
+
+  // Check if we're in an ad sequence (multiple ads)
+  let isAdSequence = playerElement.querySelector('.ytp-ad-preview-container');
 
   if (isAdShowing && !adPlaying) {
     // Ad has started
     adPlaying = true;
     if (videoPlayer) {
-      savedVolume = videoPlayer.volume; // Save current volume
+      if (savedVolume === null) { // Only save volume if not already saved
+        savedVolume = videoPlayer.volume;
+      }
       setVolume(videoPlayer, adVolume);
     }
-  } else if (!isAdShowing && adPlaying) {
-    // Ad has ended
+  } else if (!isAdShowing && !isAdSequence && adPlaying) {
+    // All ads have ended (no ad showing and no upcoming ad in sequence)
     adPlaying = false;
     if (videoPlayer && savedVolume !== null) {
       setVolume(videoPlayer, savedVolume);
       savedVolume = null;
     }
+  } else if (isAdShowing && adPlaying) {
+    // Ensure volume stays at adVolume during ad sequence
+    if (videoPlayer && videoPlayer.volume !== adVolume) {
+      setVolume(videoPlayer, adVolume);
+    }
   }
+
+  updateDevPanel();
 }
 
 // Observe changes to the 'class' attribute of the player element
