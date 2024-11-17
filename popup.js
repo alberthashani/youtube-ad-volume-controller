@@ -35,22 +35,25 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
 
-    // Add an event listener to the video volume slider to update the volume label and send the new volume
-    videoVolumeSlider.addEventListener('input', function () {
-      updateVolumeLabel(videoVolumeSlider, videoVolumeLabel);
-      chrome.tabs.sendMessage(activeTab.id, { 
-        action: MessageAction.SET_VIDEO_VOLUME, 
-        volume: videoVolumeSlider.value 
+    // Add event listeners if elements are found
+    if (videoVolumeSlider) {
+      videoVolumeSlider.addEventListener('input', function () {
+        updateVolumeLabel(videoVolumeSlider, videoVolumeLabel);
+        chrome.tabs.sendMessage(activeTab.id, { 
+          action: MessageAction.SET_VIDEO_VOLUME, 
+          volume: videoVolumeSlider.value 
+        });
       });
-    });
+    }
 
-    // Add an event listener to the ad volume slider to update the volume label and send the new volume
-    adVolumeSlider.addEventListener('input', function () {
-      updateVolumeLabel(adVolumeSlider, adVolumeLabel);
-      chrome.tabs.sendMessage(activeTab.id, { 
-        action: MessageAction.SET_AD_VOLUME, 
-        volume: adVolumeSlider.value 
+    if (adVolumeSlider) {
+      adVolumeSlider.addEventListener('input', function () {
+        updateVolumeLabel(adVolumeSlider, adVolumeLabel);
+        chrome.tabs.sendMessage(activeTab.id, { 
+          action: MessageAction.SET_AD_VOLUME, 
+          volume: adVolumeSlider.value 
+        });
       });
-    });
+    }
   });
 });
