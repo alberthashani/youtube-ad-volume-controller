@@ -35,33 +35,23 @@ function setVolume(videoPlayer, volume) {
 
 // Function to check if an ad is playing
 function checkAd() {
-  console.log('Checking for ads...');
-
   // Get the player element if not already obtained
   if (!playerElement) {
     playerElement = document.getElementById('movie_player');
     if (!playerElement) {
-      console.log('Player element not found');
       return;
-    } else {
-      console.log('Player element found');
     }
   }
-
   // Get the video player element
   var videoPlayer = document.querySelector('video');
-
   // Check if the 'ad-showing' class is present on the player
   let isAdShowing =
     playerElement.classList.contains('ad-showing') ||
     playerElement.classList.contains('ad-interrupting');
 
-  console.log('Ad showing:', isAdShowing);
-
   if (isAdShowing && !adPlaying) {
     // Ad has started
     adPlaying = true;
-    console.log('Ad started. Setting volume to ad volume');
     if (videoPlayer) {
       savedVolume = videoPlayer.volume; // Save current volume
       setVolume(videoPlayer, adVolume);
@@ -69,7 +59,6 @@ function checkAd() {
   } else if (!isAdShowing && adPlaying) {
     // Ad has ended
     adPlaying = false;
-    console.log('Ad ended. Restoring video volume');
     if (videoPlayer && savedVolume !== null) {
       setVolume(videoPlayer, savedVolume);
       savedVolume = null;
@@ -82,24 +71,19 @@ function init() {
   playerElement = document.getElementById('movie_player');
 
   if (playerElement) {
-    console.log('Player element found');
-
     const observer = new MutationObserver(function (mutations) {
       for (let mutation of mutations) {
         if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-          console.log('Player class attribute changed');
           checkAd();
         }
       }
     });
 
     observer.observe(playerElement, { attributes: true });
-    console.log('Observer attached to player element');
 
     // Initial check in case the ad is already playing
     checkAd();
   } else {
-    console.log('Player element not found during initialization. Retrying...');
     // Retry after a short delay
     setTimeout(init, 1000);
   }
