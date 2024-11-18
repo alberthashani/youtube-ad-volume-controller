@@ -37,20 +37,9 @@ Press `Ctrl+Shift+D` while on YouTube to toggle the developer panel, which shows
 - Current ad volume settings
 - Development mode status
 
-## Technical Details
+## Privacy Policy
 
-- Built with vanilla JavaScript
-- Uses Chrome Extension Manifest V3
-- Implements `MutationObserver` to detect ad state changes
-- Uses Chrome messaging API for popup-content script communication
-
-## Files
-
-- `popup.html` - Extension popup interface
-- `content.js` - Main content script for volume control
-- `popup.js` - Popup interface logic
-- `constants.js` - Shared constants
-- `manifest.json` - Extension configuration
+You can view our privacy policy [here](https://alberthashani.github.io/youtube-ad-volume-controller/privacy_policy.html).
 
 ## License
 
