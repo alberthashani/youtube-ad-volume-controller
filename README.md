@@ -1,6 +1,6 @@
-# YouTube Ad Volume Controller Extension
+# YouTube Ad Volume Controller | Chrome Extension
 
-A Chrome extension that automatically controls the volume of YouTube ads while maintaining your preferred volume for regular videos.
+This Chrome extension automatically detects when ads start and end, adjusting the volume accordingly. By allowing users to set a specific volume level for ads, it ensures a consistent and comfortable listening experience without sudden loud interruptions. Ads tend to have a higher volume than regular videos, which can be quite annoying. This discrepancy in volume levels inspired the creation of this extension.
 
 ## Features
 
