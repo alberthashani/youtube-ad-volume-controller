@@ -3,6 +3,9 @@ document.addEventListener('DOMContentLoaded', function () {
   const adVolumeLabel = document.getElementById('adVolumeLabel');
   const controls = document.getElementById('controls');
   const notYouTubeMessage = document.getElementById('notYouTubeMessage');
+  const container = document.querySelector('.container');
+  
+  let youtubeTab = null; // Store the active YouTube tab
 
   function updateVolumeLabel(slider, label) {
     label.textContent = Math.round(slider.value * 100) + '%';
@@ -16,15 +19,52 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // Get the current tab
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    var activeTab = tabs[0];
+  // Find YouTube tabs across all windows
+  function findYouTubeTabs() {
+    return new Promise((resolve) => {
+      chrome.tabs.query({}, function(tabs) {
+        const youtubeTabs = tabs.filter(tab => tab.url && tab.url.includes('youtube.com'));
+        resolve(youtubeTabs);
+      });
+    });
+  }
 
+  // Get the current active tab
+  chrome.tabs.query({ active: true, currentWindow: true }, async function (tabs) {
+    const activeTab = tabs[0];
+    const youtubeTabs = await findYouTubeTabs();
+    
     // Check if current tab is YouTube
-    if (!activeTab.url.includes('youtube.com')) {
+    if (activeTab.url.includes('youtube.com')) {
+      youtubeTab = activeTab;
+    } else if (youtubeTabs.length > 0) {
+      // Use the first YouTube tab found (or most recently active one)
+      youtubeTab = youtubeTabs.find(tab => tab.active) || youtubeTabs[0];
+    }
+
+    // If no YouTube tabs found, show the message
+    if (!youtubeTab) {
       controls.classList.add('disabled');
-      notYouTubeMessage.style.display = 'block';
+      container.classList.add('disabled');
+      notYouTubeMessage.classList.add('show');
       return;
+    }
+
+    // Update the UI to show which tab we're controlling
+    updateTabIndicator(youtubeTab, activeTab);
+
+    // Update the UI to show which tab we're controlling
+    updateTabIndicator(youtubeTab, activeTab);
+
+    // Function to update the header with tab info
+    function updateTabIndicator(ytTab, currentTab) {
+      const subtitle = document.querySelector('.subtitle');
+      if (ytTab.id !== currentTab.id) {
+        subtitle.textContent = `Controlling: ${ytTab.title.substring(0, 30)}...`;
+        subtitle.style.fontSize = '11px';
+      } else {
+        subtitle.textContent = 'Control ad volume independently';
+      }
     }
 
     // Improved helper function to check if content script is ready with retries
@@ -80,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize popup with better error handling
     async function initializePopup() {
       try {
-        const response = await sendMessageToContentScript(activeTab.id, { action: MessageAction.GET_VOLUMES });
+        const response = await sendMessageToContentScript(youtubeTab.id, { action: MessageAction.GET_VOLUMES });
         if (response) {
           if (response.adVolume !== undefined) {
             adVolumeSlider.value = response.adVolume;
@@ -100,7 +140,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (adVolumeSlider) {
       adVolumeSlider.addEventListener('input', function () {
         updateVolumeLabel(adVolumeSlider, adVolumeLabel);
-        sendMessageToContentScript(activeTab.id, { 
+        sendMessageToContentScript(youtubeTab.id, { 
           action: MessageAction.SET_AD_VOLUME, 
           volume: adVolumeSlider.value 
         }).catch(error => {

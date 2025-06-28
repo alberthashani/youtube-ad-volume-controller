@@ -3,36 +3,270 @@
 <head>
   <title>YouTube Volume Control</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      width: 200px;
-      padding: 10px;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
+
+    html {
+      border-radius: 16px;
+      overflow: hidden;
+      background: #f8fafc;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      width: 300px;
+      padding: 0;
+      background: #f8fafc;
+      color: #334155;
+      line-height: 1.6;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .container {
+      background: white;
+      margin: 0;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+      color: white;
+      padding: 24px;
+      text-align: center;
+      position: relative;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 30% 40%, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+      opacity: 0.8;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0;
+      position: relative;
+      z-index: 1;
+      letter-spacing: -0.025em;
+    }
+
+    .header .subtitle {
+      font-size: 13px;
+      opacity: 0.85;
+      margin-top: 4px;
+      position: relative;
+      z-index: 1;
+      font-weight: 400;
+    }
+
+    .content {
+      padding: 28px 24px;
+    }
+
+    .volume-control {
+      margin-bottom: 0;
+    }
+
+    .volume-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .volume-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1e293b;
+      letter-spacing: -0.01em;
+    }
+
+    .volume-value {
+      background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      min-width: 50px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(255, 0, 0, 0.25);
+    }
+
+    .slider-container {
+      position: relative;
+      margin-bottom: 12px;
+    }
+
     input[type="range"] {
       width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #e2e8f0;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      position: relative;
+      cursor: pointer;
     }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(255, 0, 0, 0.4);
+      transition: all 0.2s ease;
+      border: 2px solid white;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(255, 0, 0, 0.5);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 2px 6px rgba(255, 0, 0, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    input[type="range"]::-moz-range-thumb:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(255, 0, 0, 0.5);
+    }
+
+    .volume-indicators {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 12px;
+    }
+
+    .volume-icon {
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 500;
+    }
+
     .disabled {
-      opacity: 0.5;
+      opacity: 0.6;
       pointer-events: none;
     }
-    #notYouTubeMessage {
-      color: #666;
-      font-style: italic;
-      display: none;
+
+    .disabled .container {
+      background: #f8fafc;
+      border-color: #e2e8f0;
     }
-    .volume-control {
-      margin-bottom: 15px;
+
+    .not-youtube-message {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border: 1px solid #f59e0b;
+      color: #92400e;
+      padding: 20px;
+      border-radius: 12px;
+      margin: 16px;
+      text-align: center;
+      font-size: 13px;
+      display: none;
+      line-height: 1.5;
+    }
+
+    .not-youtube-message.show {
+      display: block;
+    }
+
+    .footer {
+      padding: 16px 24px;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      text-align: center;
+    }
+
+    .footer-text {
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    /* Loading state */
+    .loading .volume-value {
+      background: #e2e8f0;
+      color: #64748b;
+      box-shadow: none;
+    }
+
+    .loading input[type="range"] {
+      opacity: 0.5;
+    }
+
+    /* Smooth transitions */
+    * {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    input[type="range"], .volume-value {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
   </style>
 </head>
 <body>
-  <div id="controls">
-    <div class="volume-control">
-      <h3>Youtube Ad Volume <span id="adVolumeLabel">0%</span></h3>
-      <input type="range" id="adVolumeSlider" min="0" max="1" step="0.01">
+  <div class="container">
+    <div class="header">
+      <h1>YouTube Volume Control</h1>
+      <div class="subtitle">Control ad volume independently</div>
+    </div>
+    
+    <div class="content">
+      <div id="controls">
+        <div class="volume-control">
+          <div class="volume-label">
+            <span class="volume-title">Ad Volume</span>
+            <span class="volume-value" id="adVolumeLabel">0%</span>
+          </div>
+          <div class="slider-container">
+            <input type="range" id="adVolumeSlider" min="0" max="1" step="0.01">
+          </div>
+          <div class="volume-indicators">
+            <span class="volume-icon volume-low">0%</span>
+            <span class="volume-icon volume-high">100%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <div class="footer-text">Works with any open YouTube tab</div>
     </div>
   </div>
-  <p id="notYouTubeMessage">Extension only works on YouTube</p>
+  
+  <div class="not-youtube-message" id="notYouTubeMessage">
+    <strong>No YouTube Tab Found</strong><br>
+    Open YouTube in any tab to control ad volume from anywhere!
+  </div>
+  
   <script src="src/shared/constants.js"></script>
   <script src="popup.js"></script>
 </body>
