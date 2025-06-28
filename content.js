@@ -15,6 +15,11 @@ chrome.storage.sync.get(['adVolume'], function(result) {
 
 // Listen for messages from the popup
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  if (request.action === 'ping') {
+    sendResponse({ status: 'ready' });
+    return true;
+  }
+
   var videoPlayer = document.querySelector('video');
 
   switch (request.action) {

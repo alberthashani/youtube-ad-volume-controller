@@ -29,19 +29,60 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    // Send a message to the content script to get the current volumes
-    chrome.tabs.sendMessage(activeTab.id, { action: MessageAction.GET_VOLUMES }, function (response) {
-      if (response) {
-        if (response.videoVolume !== undefined) {
-          videoVolumeSlider.value = response.videoVolume;
-          updateVolumeLabel(videoVolumeSlider, videoVolumeLabel);
-        }
-        if (response.adVolume !== undefined) {
-          adVolumeSlider.value = response.adVolume;
-          updateVolumeLabel(adVolumeSlider, adVolumeLabel);
-        }
+    // Add this helper function to check if content script is ready
+    async function isContentScriptReady(tabId) {
+      return new Promise((resolve) => {
+        chrome.tabs.sendMessage(tabId, { action: 'ping' }, (response) => {
+          if (chrome.runtime.lastError) {
+            resolve(false);
+          } else {
+            resolve(true);
+          }
+        });
+      });
+    }
+
+    // Update your existing message sending code
+    async function sendMessageToContentScript(tabId, message) {
+      const isReady = await isContentScriptReady(tabId);
+      if (!isReady) {
+        console.log('Content script not ready, injecting...');
+        await chrome.scripting.executeScript({
+          target: { tabId: tabId },
+          files: ['content.js']
+        });
+        // Wait a bit for injection
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
-    });
+      
+      return new Promise((resolve, reject) => {
+        chrome.tabs.sendMessage(tabId, message, (response) => {
+          if (chrome.runtime.lastError) {
+            reject(chrome.runtime.lastError);
+          } else {
+            resolve(response);
+          }
+        });
+      });
+    }
+
+    // Send a message to the content script to get the current volumes
+    sendMessageToContentScript(activeTab.id, { action: MessageAction.GET_VOLUMES })
+      .then(response => {
+        if (response) {
+          if (response.videoVolume !== undefined) {
+            videoVolumeSlider.value = response.videoVolume;
+            updateVolumeLabel(videoVolumeSlider, videoVolumeLabel);
+          }
+          if (response.adVolume !== undefined) {
+            adVolumeSlider.value = response.adVolume;
+            updateVolumeLabel(adVolumeSlider, adVolumeLabel);
+          }
+        }
+      })
+      .catch(error => {
+        console.log('Failed to communicate with content script:', error);
+      });
 
     // Add event listeners if elements are found
     if (videoVolumeSlider) {
