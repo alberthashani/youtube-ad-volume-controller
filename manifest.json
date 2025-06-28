@@ -13,7 +13,16 @@
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*"],
-      "js": ["constants.js", "content.js"]
+      "js": [
+        "src/shared/config.js",
+        "src/shared/constants.js", 
+        "src/shared/utils.js",
+        "src/content/volumeManager.js",
+        "src/content/adDetector.js",
+        "src/content/devPanel.js",
+        "src/content/messageHandler.js",
+        "src/content/index.js"
+      ]
     }
   ],
   "action": {

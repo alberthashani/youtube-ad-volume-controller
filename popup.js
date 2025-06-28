@@ -1,10 +1,8 @@
 document.addEventListener('DOMContentLoaded', function () {
-  var videoVolumeSlider = document.getElementById('videoVolumeSlider');
-  var videoVolumeLabel = document.getElementById('videoVolumeLabel');
-  var adVolumeSlider = document.getElementById('adVolumeSlider');
-  var adVolumeLabel = document.getElementById('adVolumeLabel');
-  var controls = document.getElementById('controls');
-  var notYouTubeMessage = document.getElementById('notYouTubeMessage');
+  const adVolumeSlider = document.getElementById('adVolumeSlider');
+  const adVolumeLabel = document.getElementById('adVolumeLabel');
+  const controls = document.getElementById('controls');
+  const notYouTubeMessage = document.getElementById('notYouTubeMessage');
 
   function updateVolumeLabel(slider, label) {
     label.textContent = Math.round(slider.value * 100) + '%';
@@ -84,10 +82,6 @@ document.addEventListener('DOMContentLoaded', function () {
       try {
         const response = await sendMessageToContentScript(activeTab.id, { action: MessageAction.GET_VOLUMES });
         if (response) {
-          if (response.videoVolume !== undefined) {
-            videoVolumeSlider.value = response.videoVolume;
-            updateVolumeLabel(videoVolumeSlider, videoVolumeLabel);
-          }
           if (response.adVolume !== undefined) {
             adVolumeSlider.value = response.adVolume;
             updateVolumeLabel(adVolumeSlider, adVolumeLabel);
@@ -103,18 +97,6 @@ document.addEventListener('DOMContentLoaded', function () {
     initializePopup();
 
     // Add event listeners with error handling
-    if (videoVolumeSlider) {
-      videoVolumeSlider.addEventListener('input', function () {
-        updateVolumeLabel(videoVolumeSlider, videoVolumeLabel);
-        sendMessageToContentScript(activeTab.id, { 
-          action: MessageAction.SET_VIDEO_VOLUME, 
-          volume: videoVolumeSlider.value 
-        }).catch(error => {
-          console.log('Failed to set video volume:', error.message);
-        });
-      });
-    }
-
     if (adVolumeSlider) {
       adVolumeSlider.addEventListener('input', function () {
         updateVolumeLabel(adVolumeSlider, adVolumeLabel);
