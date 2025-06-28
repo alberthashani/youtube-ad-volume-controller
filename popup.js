@@ -60,10 +60,10 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateTabIndicator(ytTab, currentTab) {
       const subtitle = document.querySelector('.subtitle');
       if (ytTab.id !== currentTab.id) {
-        subtitle.textContent = `Controlling: ${ytTab.title.substring(0, 30)}...`;
+        subtitle.textContent = `Tab: ${ytTab.title.substring(0, 30)}...`;
         subtitle.style.fontSize = '11px';
       } else {
-        subtitle.textContent = 'Control ad volume independently';
+        subtitle.textContent = '';
       }
     }
 
