@@ -3,7 +3,10 @@ let devPanel = null;
 let playerElement = null;
 let adPlaying = false;
 let savedVolume = null; // Store original volume when ad starts
+let savedMuted = null; // Store original muted state when ad starts
 let adVolume = 0.05; // Default ad volume
+let volumeSaveTimeout = null; // Timeout for delayed volume saving
+let lastKnownUserVolume = null; // Track user volume continuously
 
 // Load saved ad volume when script initializes
 chrome.storage.sync.get(['adVolume'], function(result) {
@@ -48,6 +51,36 @@ function setVolume(videoPlayer, volume) {
   videoPlayer.dispatchEvent(event);
 }
 
+// Function to save current volume and muted state
+function saveCurrentVolumeState(videoPlayer) {
+  // Clear any existing timeout
+  if (volumeSaveTimeout) {
+    clearTimeout(volumeSaveTimeout);
+  }
+  
+  // Only save if we don't already have a saved volume (prevent overwriting)
+  if (videoPlayer && savedVolume === null) {
+    // Use lastKnownUserVolume if available and recent, otherwise current volume
+    savedVolume = lastKnownUserVolume !== null ? lastKnownUserVolume : videoPlayer.volume;
+    savedMuted = videoPlayer.muted;
+    console.log('YouTube Ad Volume Controller: Saved volume:', savedVolume, 'muted:', savedMuted);
+    updateDevPanel(); // Update panel immediately after saving
+  }
+}
+
+// Function to restore saved volume and muted state
+function restoreSavedVolumeState(videoPlayer) {
+  if (videoPlayer && savedVolume !== null) {
+    console.log('YouTube Ad Volume Controller: Restoring volume:', savedVolume, 'muted:', savedMuted);
+    setVolume(videoPlayer, savedVolume);
+    if (savedMuted !== null) {
+      videoPlayer.muted = savedMuted;
+    }
+    savedVolume = null;
+    savedMuted = null;
+  }
+}
+
 // Function to check if an ad is playing
 function checkAd() {
   // Get the player element if not already obtained
@@ -69,24 +102,27 @@ function checkAd() {
   let isAdSequence = playerElement.querySelector('.ytp-ad-preview-container');
 
   if (isAdShowing && !adPlaying) {
-    // Ad has started
+    // Ad has started - save volume BEFORE changing it
     adPlaying = true;
     if (videoPlayer) {
-      if (savedVolume === null) { // Only save volume if not already saved
-        savedVolume = videoPlayer.volume;
-      }
-      setVolume(videoPlayer, adVolume);
+      // Save current volume state immediately (this is the user's actual volume)
+      saveCurrentVolumeState(videoPlayer);
+      // Set ad volume after a very short delay
+      setTimeout(() => {
+        setVolume(videoPlayer, adVolume);
+        updateDevPanel();
+      }, 10); // Reduced delay from 50ms to 10ms
     }
   } else if (!isAdShowing && !isAdSequence && adPlaying) {
     // All ads have ended (no ad showing and no upcoming ad in sequence)
     adPlaying = false;
-    if (videoPlayer && savedVolume !== null) {
-      setVolume(videoPlayer, savedVolume);
-      savedVolume = null;
-    }
+    // Restore saved volume state
+    restoreSavedVolumeState(videoPlayer);
+    updateDevPanel();
   } else if (isAdShowing && adPlaying) {
     // Ensure volume stays at adVolume during ad sequence
-    if (videoPlayer && videoPlayer.volume !== adVolume) {
+    // But don't save volume during ads - we already have the correct saved volume
+    if (videoPlayer && Math.abs(videoPlayer.volume - adVolume) > 0.01) {
       setVolume(videoPlayer, adVolume);
     }
   }
@@ -109,6 +145,21 @@ function init() {
 
     observer.observe(playerElement, { attributes: true });
 
+    // Also observe the video element for volume changes
+    const videoPlayer = document.querySelector('video');
+    if (videoPlayer) {
+      // Listen for volume changes
+      videoPlayer.addEventListener('volumechange', function() {
+        // Track user volume changes when not in ad
+        if (!adPlaying && savedVolume === null) {
+          lastKnownUserVolume = videoPlayer.volume;
+          console.log('YouTube Ad Volume Controller: User volume changed to:', videoPlayer.volume);
+        }
+        // Update dev panel on any volume change
+        updateDevPanel();
+      });
+    }
+
     // Initial check in case the ad is already playing
     checkAd();
   } else {
@@ -118,6 +169,34 @@ function init() {
 }
 
 init();
+
+// Cleanup function for edge cases
+function cleanup() {
+  if (volumeSaveTimeout) {
+    clearTimeout(volumeSaveTimeout);
+    volumeSaveTimeout = null;
+  }
+}
+
+// Listen for page navigation to cleanup
+window.addEventListener('beforeunload', cleanup);
+
+// Enhanced periodic check to ensure consistency and track user volume
+setInterval(function() {
+  const videoPlayer = document.querySelector('video');
+  
+  if (savedVolume !== null && !adPlaying) {
+    console.log('YouTube Ad Volume Controller: Warning - savedVolume exists but no ad playing. Cleaning up.');
+    savedVolume = null;
+    savedMuted = null;
+    updateDevPanel();
+  }
+  
+  // Update lastKnownUserVolume when not in ad and no volume is saved
+  if (videoPlayer && !adPlaying && savedVolume === null) {
+    lastKnownUserVolume = videoPlayer.volume;
+  }
+}, 1000); // Check more frequently (every 1 second instead of 5)
 
 function createDevPanel() {
   if (devPanel) return;
@@ -146,11 +225,24 @@ function updateDevPanel() {
   if (!devPanel) return;
   const videoPlayer = document.querySelector('video');
   
+  const currentVolume = videoPlayer ? Math.round(videoPlayer.volume * 100) : 0;
+  
+  // Show user's intended volume: saved volume when ad is playing, current volume when not
+  let userIntendedVolume;
+  if (adPlaying && savedVolume !== null) {
+    // During ad: show the saved user volume
+    userIntendedVolume = Math.round(savedVolume * 100) + '%';
+  } else {
+    // Not during ad: show current video player volume
+    userIntendedVolume = currentVolume + '%';
+  }
+  
   devPanel.innerHTML = `
     <div>Dev Mode Active</div>
-    <div>Current Volume: ${videoPlayer ? Math.round(videoPlayer.volume * 100) : 0}%</div>
-    <div>Ad Volume: ${Math.round(adVolume * 100)}%</div>
-    <div>Saved Volume: ${Math.round(savedVolume * 100)}%</div>
+    <div>Volume: ${userIntendedVolume}</div>
+    <div>Realtime VideoPlayer volume: ${currentVolume}%</div>
+    <div>Ad volume: ${Math.round(adVolume * 100)}%</div>
+    <div>Ad Playing: ${adPlaying}</div>
   `;
 }
 

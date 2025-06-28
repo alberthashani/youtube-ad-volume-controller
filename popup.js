@@ -29,46 +29,60 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    // Add this helper function to check if content script is ready
-    async function isContentScriptReady(tabId) {
-      return new Promise((resolve) => {
-        chrome.tabs.sendMessage(tabId, { action: 'ping' }, (response) => {
-          if (chrome.runtime.lastError) {
-            resolve(false);
-          } else {
-            resolve(true);
+    // Improved helper function to check if content script is ready with retries
+    async function isContentScriptReady(tabId, maxRetries = 3) {
+      for (let i = 0; i < maxRetries; i++) {
+        try {
+          const response = await new Promise((resolve, reject) => {
+            chrome.tabs.sendMessage(tabId, { action: 'ping' }, (response) => {
+              if (chrome.runtime.lastError) {
+                reject(new Error(chrome.runtime.lastError.message));
+              } else {
+                resolve(response);
+              }
+            });
+          });
+          if (response && response.status === 'ready') {
+            return true;
           }
-        });
-      });
-    }
-
-    // Update your existing message sending code
-    async function sendMessageToContentScript(tabId, message) {
-      const isReady = await isContentScriptReady(tabId);
-      if (!isReady) {
-        console.log('Content script not ready, injecting...');
-        await chrome.scripting.executeScript({
-          target: { tabId: tabId },
-          files: ['content.js']
-        });
-        // Wait a bit for injection
-        await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (error) {
+          console.log(`Ping attempt ${i + 1} failed:`, error.message);
+          if (i < maxRetries - 1) {
+            await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms before retry
+          }
+        }
       }
-      
-      return new Promise((resolve, reject) => {
-        chrome.tabs.sendMessage(tabId, message, (response) => {
-          if (chrome.runtime.lastError) {
-            reject(chrome.runtime.lastError);
-          } else {
-            resolve(response);
-          }
-        });
-      });
+      return false;
     }
 
-    // Send a message to the content script to get the current volumes
-    sendMessageToContentScript(activeTab.id, { action: MessageAction.GET_VOLUMES })
-      .then(response => {
+    // Enhanced message sending with better error handling
+    async function sendMessageToContentScript(tabId, message) {
+      try {
+        const isReady = await isContentScriptReady(tabId);
+        if (!isReady) {
+          console.log('Content script not ready after retries, may need page refresh');
+          return null;
+        }
+        
+        return new Promise((resolve, reject) => {
+          chrome.tabs.sendMessage(tabId, message, (response) => {
+            if (chrome.runtime.lastError) {
+              reject(new Error(chrome.runtime.lastError.message));
+            } else {
+              resolve(response);
+            }
+          });
+        });
+      } catch (error) {
+        console.log('Failed to send message:', error.message);
+        return null;
+      }
+    }
+
+    // Initialize popup with better error handling
+    async function initializePopup() {
+      try {
+        const response = await sendMessageToContentScript(activeTab.id, { action: MessageAction.GET_VOLUMES });
         if (response) {
           if (response.videoVolume !== undefined) {
             videoVolumeSlider.value = response.videoVolume;
@@ -79,18 +93,24 @@ document.addEventListener('DOMContentLoaded', function () {
             updateVolumeLabel(adVolumeSlider, adVolumeLabel);
           }
         }
-      })
-      .catch(error => {
-        console.log('Failed to communicate with content script:', error);
-      });
+      } catch (error) {
+        console.log('Failed to initialize popup:', error.message);
+        // Still allow the popup to work with stored values
+      }
+    }
 
-    // Add event listeners if elements are found
+    // Initialize the popup
+    initializePopup();
+
+    // Add event listeners with error handling
     if (videoVolumeSlider) {
       videoVolumeSlider.addEventListener('input', function () {
         updateVolumeLabel(videoVolumeSlider, videoVolumeLabel);
-        chrome.tabs.sendMessage(activeTab.id, { 
+        sendMessageToContentScript(activeTab.id, { 
           action: MessageAction.SET_VIDEO_VOLUME, 
           volume: videoVolumeSlider.value 
+        }).catch(error => {
+          console.log('Failed to set video volume:', error.message);
         });
       });
     }
@@ -98,9 +118,11 @@ document.addEventListener('DOMContentLoaded', function () {
     if (adVolumeSlider) {
       adVolumeSlider.addEventListener('input', function () {
         updateVolumeLabel(adVolumeSlider, adVolumeLabel);
-        chrome.tabs.sendMessage(activeTab.id, { 
+        sendMessageToContentScript(activeTab.id, { 
           action: MessageAction.SET_AD_VOLUME, 
           volume: adVolumeSlider.value 
+        }).catch(error => {
+          console.log('Failed to set ad volume:', error.message);
         });
       });
     }
