@@ -4,11 +4,9 @@ This Chrome extension automatically detects when ads start and end, adjusting th
 
 ## Features
 
-- 🔊 Set volume levels for ads
-- 🔄 Automatically restores original volume when ads end
-- 🎯 Works only on YouTube domains
-- 🖥️ Simple, clean popup interface
-- 📊 Development panel for real-time volume monitoring (Ctrl+Shift+D)
+- Set volume levels for ads
+- Automatically restores original volume when ads end
+- Development panel for real-time volume monitoring (Ctrl+Shift+D)
 
 ## Popup User Interface
 
@@ -32,10 +30,7 @@ This Chrome extension automatically detects when ads start and end, adjusting th
 
 ### Developer Mode
 
-Press `Ctrl+Shift+D` while on YouTube to toggle the developer panel, which shows:
-- Current video volume
-- Current ad volume settings
-- Development mode status
+Press `Ctrl+Shift+D` while on YouTube to toggle the developer panel.
 
 ## Privacy Policy
 
