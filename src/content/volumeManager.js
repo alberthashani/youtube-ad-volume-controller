@@ -3,10 +3,7 @@ class VolumeManager {
   constructor() {
     this.adVolume = CONFIG.DEFAULT_AD_VOLUME;
     this.videoVolume = CONFIG.DEFAULT_VIDEO_VOLUME;
-    this.savedVolume = null; // User's volume before ad started
-    this.savedMuted = null; // User's muted state before ad started
-    this.lastKnownUserVolume = null;
-    this.volumeSaveTimeout = null;
+    this.isUpdatingVolume = false; // Prevent feedback loops
     
     this.loadAdVolumeFromStorage();
     this.loadVideoVolumeFromStorage();
@@ -24,23 +21,26 @@ class VolumeManager {
         videoPlayer.hasVolumeListener = true; // Prevent duplicate listeners
         
         videoPlayer.addEventListener('volumechange', () => {
-          // During ads, save the volume change as user's intent for after the ad
-          if (window.adDetector?.isAdPlaying()) {
-            // User changed volume during ad - update our saved volume for restoration
-            if (this.savedVolume !== null) {
-              this.savedVolume = videoPlayer.volume;
-            }
-            // Also update videoVolume preference if volume was changed by user
+          // Skip if we're programmatically updating volume to prevent feedback loops
+          if (this.isUpdatingVolume) {
+            return;
+          }
+          
+          // User changed volume - update their preference
+          const isAdPlaying = window.adDetector?.isAdPlaying();
+          
+          if (isAdPlaying) {
+            // During ad: user changed volume, update their video volume preference
+            // This will be applied when the ad ends
             this.videoVolume = videoPlayer.volume;
             chrome.storage.sync.set({ [CONFIG.STORAGE_KEYS.VIDEO_VOLUME]: this.videoVolume });
           } else {
-            // Not during ad - this is a normal video volume change
-            this.lastKnownUserVolume = videoPlayer.volume;
+            // Normal video: update video volume preference
             this.videoVolume = videoPlayer.volume;
             chrome.storage.sync.set({ [CONFIG.STORAGE_KEYS.VIDEO_VOLUME]: this.videoVolume });
           }
           
-          // Always notify popup of volume changes for sync
+          // Always notify popup of preference changes for sync
           chrome.runtime.sendMessage({
             action: MessageAction.VOLUME_CHANGED,
             videoVolume: this.videoVolume,
@@ -90,7 +90,9 @@ class VolumeManager {
     
     const videoPlayer = utils.getCurrentVideoElement();
     if (videoPlayer && window.adDetector?.isAdPlaying()) {
+      this.isUpdatingVolume = true;
       utils.setVolume(videoPlayer, volume);
+      setTimeout(() => { this.isUpdatingVolume = false; }, 100);
     }
   }
 
@@ -112,7 +114,9 @@ class VolumeManager {
     
     const videoPlayer = utils.getCurrentVideoElement();
     if (videoPlayer && !window.adDetector?.isAdPlaying()) {
+      this.isUpdatingVolume = true;
       utils.setVolume(videoPlayer, volume);
+      setTimeout(() => { this.isUpdatingVolume = false; }, 100);
     }
   }
 
@@ -125,75 +129,34 @@ class VolumeManager {
   }
 
   /**
-   * Save current volume state before ad starts (prevents overwriting existing saved state)
+   * Apply ad volume when ad starts
    * @param {HTMLVideoElement} videoPlayer 
    */
-  saveCurrentVolumeState(videoPlayer) {
-    if (this.volumeSaveTimeout) {
-      clearTimeout(this.volumeSaveTimeout);
-    }
-    
-    if (videoPlayer && this.savedVolume === null) {
-      this.savedVolume = this.lastKnownUserVolume !== null ? 
-        this.lastKnownUserVolume : videoPlayer.volume;
-      this.savedMuted = videoPlayer.muted;
+  applyAdVolume(videoPlayer) {
+    if (videoPlayer) {
+      this.isUpdatingVolume = true;
+      utils.setVolume(videoPlayer, this.adVolume);
+      setTimeout(() => { this.isUpdatingVolume = false; }, 100);
     }
   }
 
   /**
-   * Restore saved volume state after ad ends
+   * Apply video volume when ad ends
    * @param {HTMLVideoElement} videoPlayer 
    */
-  restoreSavedVolumeState(videoPlayer) {
-    if (videoPlayer && this.savedVolume !== null) {
-      utils.setVolume(videoPlayer, this.savedVolume);
-      if (this.savedMuted !== null) {
-        videoPlayer.muted = this.savedMuted;
-      }
-      this.clearSavedState();
+  applyVideoVolume(videoPlayer) {
+    if (videoPlayer) {
+      this.isUpdatingVolume = true;
+      utils.setVolume(videoPlayer, this.videoVolume);
+      setTimeout(() => { this.isUpdatingVolume = false; }, 100);
     }
-  }
-
-  /**
-   * Clear saved volume state
-   */
-  clearSavedState() {
-    this.savedVolume = null;
-    this.savedMuted = null;
-  }
-
-  /**
-   * Update last known user volume (used when ads start to restore proper volume)
-   * @param {number} volume - Volume level (0.0 to 1.0)
-   */
-  updateLastKnownUserVolume(volume) {
-    this.lastKnownUserVolume = volume;
-  }
-
-  /**
-   * Get saved volume for display purposes
-   * @returns {number|null}
-   */
-  getSavedVolume() {
-    return this.savedVolume;
-  }
-
-  /**
-   * Check if volume state is saved
-   * @returns {boolean}
-   */
-  hasVolumeStateSaved() {
-    return this.savedVolume !== null;
   }
 
   /**
    * Cleanup function
    */
   cleanup() {
-    if (this.volumeSaveTimeout) {
-      clearTimeout(this.volumeSaveTimeout);
-      this.volumeSaveTimeout = null;
-    }
+    // No cleanup needed in simplified version
   }
 }
 

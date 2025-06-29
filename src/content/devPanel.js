@@ -79,20 +79,11 @@ class DevPanel {
     const videoPlayer = utils.getCurrentVideoElement();
     const currentVolume = videoPlayer ? Math.round(videoPlayer.volume * 100) : 0;
     
-    // Show user's intended volume
-    let userIntendedVolume;
-    if (this.adDetector.isAdPlaying() && this.volumeManager.hasVolumeStateSaved()) {
-      userIntendedVolume = Math.round(this.volumeManager.getSavedVolume() * 100) + '%';
-    } else {
-      userIntendedVolume = currentVolume + '%';
-    }
-    
     this.panel.innerHTML = `
       <div>Dev Mode Active</div>
-      <div>Volume: ${userIntendedVolume}</div>
-      <div>Realtime VideoPlayer volume: ${currentVolume}%</div>
-      <div>Ad volume: ${Math.round(this.volumeManager.getAdVolume() * 100)}%</div>
-      <div>Video volume: ${Math.round(this.volumeManager.getVideoVolume() * 100)}%</div>
+      <div>Current Player Volume: ${currentVolume}%</div>
+      <div>Ad Volume Preference: ${Math.round(this.volumeManager.getAdVolume() * 100)}%</div>
+      <div>Video Volume Preference: ${Math.round(this.volumeManager.getVideoVolume() * 100)}%</div>
       <div>Ad Playing: ${this.adDetector.isAdPlaying()}</div>
     `;
   }

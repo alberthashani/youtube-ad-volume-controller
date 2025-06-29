@@ -78,10 +78,9 @@ class AdDetector {
   onAdStart(videoPlayer) {
     this.adPlaying = true;
     if (videoPlayer) {
-      this.volumeManager.saveCurrentVolumeState(videoPlayer);
       // Apply ad volume after short delay
       setTimeout(() => {
-        utils.setVolume(videoPlayer, this.volumeManager.getAdVolume());
+        this.volumeManager.applyAdVolume(videoPlayer);
       }, CONFIG.AD_VOLUME_APPLY_DELAY);
     }
   }
@@ -92,7 +91,8 @@ class AdDetector {
    */
   onAdEnd(videoPlayer) {
     this.adPlaying = false;
-    this.volumeManager.restoreSavedVolumeState(videoPlayer);
+    // Apply user's preferred video volume
+    this.volumeManager.applyVideoVolume(videoPlayer);
   }
 
   /**
@@ -102,7 +102,7 @@ class AdDetector {
   enforceAdVolume(videoPlayer) {
     if (videoPlayer && 
         Math.abs(videoPlayer.volume - this.volumeManager.getAdVolume()) > CONFIG.VOLUME_CHANGE_THRESHOLD) {
-      utils.setVolume(videoPlayer, this.volumeManager.getAdVolume());
+      this.volumeManager.applyAdVolume(videoPlayer);
     }
   }
 
