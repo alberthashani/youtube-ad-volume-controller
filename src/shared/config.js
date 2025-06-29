@@ -1,37 +1,37 @@
 // Configuration constants for the YouTube Ad Volume Controller
 const CONFIG = {
   // Volume settings
-  DEFAULT_AD_VOLUME: 0.05,
-  VOLUME_CHANGE_THRESHOLD: 0.01,
+  DEFAULT_AD_VOLUME: 0.05, // 5% volume for ads
+  VOLUME_CHANGE_THRESHOLD: 0.01, // Minimum volume change to register
   
-  // Timing constants
-  AD_VOLUME_APPLY_DELAY: 10, // ms
-  INIT_RETRY_DELAY: 1000, // ms
-  DEV_PANEL_UPDATE_INTERVAL: 1000, // ms
-  PERIODIC_CHECK_INTERVAL: 1000, // ms
+  // Timing constants (in milliseconds)
+  AD_VOLUME_APPLY_DELAY: 10,
+  INIT_RETRY_DELAY: 1000,
+  DEV_PANEL_UPDATE_INTERVAL: 1000,
+  PERIODIC_CHECK_INTERVAL: 1000,
   
-  // Storage keys
+  // Chrome storage keys
   STORAGE_KEYS: {
     AD_VOLUME: 'adVolume'
   },
   
-  // DOM selectors
+  // YouTube DOM selectors
   SELECTORS: {
     VIDEO_PLAYER: 'video',
-    MOVIE_PLAYER: '#movie_player',
-    AD_PREVIEW_CONTAINER: '.ytp-ad-preview-container'
+    MOVIE_PLAYER: '#movie_player', // Main YouTube player container
+    AD_PREVIEW_CONTAINER: '.ytp-ad-preview-container' // Ad sequence indicator
   },
   
-  // CSS classes for ad detection
+  // YouTube CSS classes for ad detection
   AD_CLASSES: {
-    AD_SHOWING: 'ad-showing',
-    AD_INTERRUPTING: 'ad-interrupting'
+    AD_SHOWING: 'ad-showing', // Single ad playing
+    AD_INTERRUPTING: 'ad-interrupting' // Interruptive ad (skippable/non-skippable)
   },
   
-  // Dev panel settings
+  // Developer panel configuration
   DEV_PANEL: {
     ID: 'yt-volume-control-dev-panel',
-    TOGGLE_SHORTCUT: { ctrl: true, shift: true, key: 'D' },
+    TOGGLE_SHORTCUT: { ctrl: true, shift: true, key: 'D' }, // Ctrl+Shift+D
     STYLES: `
       position: fixed;
       bottom: 20px;
@@ -47,7 +47,6 @@ const CONFIG = {
   }
 };
 
-// Make config available globally
 if (typeof window !== 'undefined') {
   window.CONFIG = CONFIG;
 }

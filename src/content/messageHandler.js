@@ -1,4 +1,4 @@
-// Message Handler - Handles Chrome runtime message communication
+// Message Handler - Manages communication between popup and content script
 class MessageHandler {
   constructor(volumeManager, devPanel) {
     this.volumeManager = volumeManager;
@@ -17,10 +17,10 @@ class MessageHandler {
   }
 
   /**
-   * Handle incoming messages
-   * @param {Object} request 
-   * @param {Function} sendResponse 
-   * @returns {boolean}
+   * Process incoming messages from popup or other extension components
+   * @param {Object} request - Message object with action and data
+   * @param {Function} sendResponse - Callback to send response
+   * @returns {boolean} - Whether to keep message channel open
    */
   handleMessage(request, sendResponse) {
     if (request.action === 'ping') {
@@ -37,7 +37,7 @@ class MessageHandler {
 
       case MessageAction.SET_AD_VOLUME:
         this.volumeManager.setAdVolume(request.volume);
-        this.devPanel.update(); // Update dev panel if visible
+        this.devPanel.update();
         break;
 
       default:
@@ -45,7 +45,7 @@ class MessageHandler {
         break;
     }
 
-    return true; // Keep message channel open for async responses
+    return true;
   }
 }
 

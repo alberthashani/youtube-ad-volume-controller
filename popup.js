@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return true;
           }
         } catch (error) {
-          console.log(`Ping attempt ${i + 1} failed:`, error.message);
+          // Ping attempt failed, retry if not the last attempt
           if (i < maxRetries - 1) {
             await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms before retry
           }
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function () {
       try {
         const isReady = await isContentScriptReady(tabId);
         if (!isReady) {
-          console.log('Content script not ready after retries, may need page refresh');
+          // Content script not ready after retries, may need page refresh
           return null;
         }
         
@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function () {
           });
         });
       } catch (error) {
-        console.log('Failed to send message:', error.message);
+        // Failed to send message
         return null;
       }
     }
@@ -128,8 +128,7 @@ document.addEventListener('DOMContentLoaded', function () {
           }
         }
       } catch (error) {
-        console.log('Failed to initialize popup:', error.message);
-        // Still allow the popup to work with stored values
+        // Failed to initialize popup - still allow the popup to work with stored values
       }
     }
 
@@ -144,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function () {
           action: MessageAction.SET_AD_VOLUME, 
           volume: adVolumeSlider.value 
         }).catch(error => {
-          console.log('Failed to set ad volume:', error.message);
+          // Failed to set ad volume
         });
       });
     }

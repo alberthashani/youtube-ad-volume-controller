@@ -26,25 +26,25 @@ const utils = {
   },
 
   /**
-   * Set volume with synthetic event dispatching
+   * Set video volume and dispatch synthetic events to ensure YouTube recognizes the change
    * @param {HTMLVideoElement} videoPlayer 
-   * @param {number} volume 
+   * @param {number} volume - Volume level (0.0 to 1.0)
    */
   setVolume(videoPlayer, volume) {
     if (!videoPlayer) return;
     
     videoPlayer.volume = volume;
     
-    // Dispatch synthetic events to simulate user interaction
+    // Dispatch synthetic events to simulate user interaction and bypass YouTube's volume control
     const event = new Event('input', { bubbles: true });
     videoPlayer.dispatchEvent(event);
   },
 
   /**
    * Debounce function to limit frequent calls
-   * @param {Function} func 
-   * @param {number} delay 
-   * @returns {Function}
+   * @param {Function} func - Function to debounce
+   * @param {number} delay - Delay in milliseconds
+   * @returns {Function} Debounced function
    */
   debounce(func, delay) {
     let timeoutId;
@@ -55,15 +55,24 @@ const utils = {
   },
 
   /**
-   * Log messages with extension prefix
-   * @param {...any} args 
+   * Check if dev panel is currently visible (used for conditional logging)
+   * @returns {boolean}
+   */
+  isDevModeActive() {
+    return document.getElementById(CONFIG.DEV_PANEL.ID) !== null;
+  },
+
+  /**
+   * Conditional logging - only shows messages when dev panel is active
+   * @param {...any} args - Arguments to log
    */
   log(...args) {
-    console.log('YouTube Ad Volume Controller:', ...args);
+    if (this.isDevModeActive()) {
+      console.log('YouTube Ad Volume Controller:', ...args);
+    }
   }
 };
 
-// Make utils available globally
 if (typeof window !== 'undefined') {
   window.utils = utils;
 }

@@ -1,11 +1,11 @@
-// Dev Panel - Development panel functionality
+// Dev Panel - Development debugging overlay for volume and ad state monitoring
 class DevPanel {
   constructor(volumeManager, adDetector) {
     this.volumeManager = volumeManager;
     this.adDetector = adDetector;
     this.panel = null;
     this.updateInterval = null;
-    this.isEnabled = true; // Dev mode flag
+    this.isEnabled = true;
     
     this.setupKeyboardShortcut();
   }

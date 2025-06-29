@@ -1,4 +1,4 @@
-// Main content script - Orchestrates all modules
+// Main content script - Orchestrates all extension modules
 class YouTubeAdVolumeController {
   constructor() {
     this.volumeManager = new VolumeManager();
@@ -12,10 +12,9 @@ class YouTubeAdVolumeController {
   }
 
   /**
-   * Initialize the extension
+   * Initialize the extension on YouTube pages
    */
   init() {
-    // Only run on YouTube pages
     if (!utils.isYouTubePage()) {
       return;
     }
@@ -24,11 +23,8 @@ class YouTubeAdVolumeController {
     this.setupPeriodicCheck();
     this.setupCleanupListeners();
     
-    // Make global references available for cross-module communication
     window.adDetector = this.adDetector;
     window.volumeManager = this.volumeManager;
-    
-    utils.log('Extension initialized');
   }
 
   /**
@@ -41,19 +37,17 @@ class YouTubeAdVolumeController {
   }
 
   /**
-   * Perform periodic consistency checks
+   * Perform periodic consistency checks to prevent state issues
    */
   performConsistencyCheck() {
     const videoPlayer = utils.getCurrentVideoElement();
     
-    // Clean up orphaned saved volume state
     if (this.volumeManager.hasVolumeStateSaved() && !this.adDetector.isAdPlaying()) {
       utils.log('Warning - savedVolume exists but no ad playing. Cleaning up.');
       this.volumeManager.clearSavedState();
       this.devPanel.update();
     }
     
-    // Update last known user volume when not in ad
     if (videoPlayer && 
         !this.adDetector.isAdPlaying() && 
         !this.volumeManager.hasVolumeStateSaved()) {
@@ -62,14 +56,14 @@ class YouTubeAdVolumeController {
   }
 
   /**
-   * Setup cleanup event listeners
+   * Setup cleanup event listeners for page navigation
    */
   setupCleanupListeners() {
     window.addEventListener('beforeunload', () => this.cleanup());
   }
 
   /**
-   * Cleanup all resources
+   * Cleanup all resources and intervals
    */
   cleanup() {
     this.volumeManager.cleanup();

@@ -1,14 +1,14 @@
-// Ad Detector - Handles ad detection logic
+// Ad Detector - Monitors YouTube player for ad state changes
 class AdDetector {
   constructor(volumeManager) {
     this.volumeManager = volumeManager;
-    this.playerElement = null;
+    this.playerElement = null; // YouTube's main player container
     this.adPlaying = false;
-    this.observer = null;
+    this.observer = null; // MutationObserver for class changes
   }
 
   /**
-   * Initialize ad detection
+   * Initialize ad detection with retry mechanism
    */
   init() {
     this.playerElement = utils.getPlayerElement();
@@ -16,15 +16,14 @@ class AdDetector {
     if (this.playerElement) {
       this.setupObserver();
       this.setupVideoVolumeListener();
-      this.checkAd(); // Initial check
+      this.checkAd();
     } else {
-      // Retry after delay
       setTimeout(() => this.init(), CONFIG.INIT_RETRY_DELAY);
     }
   }
 
   /**
-   * Setup mutation observer for player class changes
+   * Setup mutation observer to watch for YouTube player class changes (ad indicators)
    */
   setupObserver() {
     this.observer = new MutationObserver((mutations) => {
@@ -39,23 +38,21 @@ class AdDetector {
   }
 
   /**
-   * Setup video volume change listener
+   * Track user volume changes during regular content (not ads)
    */
   setupVideoVolumeListener() {
     const videoPlayer = utils.getCurrentVideoElement();
     if (videoPlayer) {
       videoPlayer.addEventListener('volumechange', () => {
-        // Track user volume changes when not in ad
         if (!this.adPlaying && !this.volumeManager.hasVolumeStateSaved()) {
           this.volumeManager.updateLastKnownUserVolume(videoPlayer.volume);
-          utils.log('User volume changed to:', videoPlayer.volume);
         }
       });
     }
   }
 
   /**
-   * Check if ad is currently playing
+   * Detect ad state by checking YouTube's CSS classes and DOM elements
    */
   checkAd() {
     if (!this.playerElement) {
@@ -65,21 +62,19 @@ class AdDetector {
 
     const videoPlayer = utils.getCurrentVideoElement();
     
-    // Check if any type of ad is showing
     const isAdShowing = this.playerElement.classList.contains(CONFIG.AD_CLASSES.AD_SHOWING) ||
                        this.playerElement.classList.contains(CONFIG.AD_CLASSES.AD_INTERRUPTING);
 
-    // Check if we're in an ad sequence (multiple ads)
     const isAdSequence = this.playerElement.querySelector(CONFIG.SELECTORS.AD_PREVIEW_CONTAINER);
 
     this.handleAdStateChange(isAdShowing, isAdSequence, videoPlayer);
   }
 
   /**
-   * Handle ad state changes
-   * @param {boolean} isAdShowing 
-   * @param {boolean} isAdSequence 
-   * @param {HTMLVideoElement} videoPlayer 
+   * Process ad state transitions and trigger appropriate actions
+   * @param {boolean} isAdShowing - Whether ad CSS classes are present
+   * @param {boolean} isAdSequence - Whether ad sequence indicator is present
+   * @param {HTMLVideoElement} videoPlayer - Current video element
    */
   handleAdStateChange(isAdShowing, isAdSequence, videoPlayer) {
     if (isAdShowing && !this.adPlaying) {
