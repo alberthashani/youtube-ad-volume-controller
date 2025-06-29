@@ -33,7 +33,23 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       break;
 
     case MessageAction.GET_VIDEO_TITLE:
-      const titleElement = document.querySelector('h1.ytd-watch-metadata yt-formatted-string');
+      // Try multiple selectors to find video title
+      const titleSelectors = [
+        'h1.ytd-watch-metadata yt-formatted-string',
+        'h1.ytd-video-primary-info-renderer yt-formatted-string', 
+        'ytd-watch-metadata h1 yt-formatted-string',
+        'ytd-video-primary-info-renderer h1',
+        'h1.style-scope.ytd-video-primary-info-renderer',
+        '.ytd-watch-metadata h1',
+        'h1.ytd-watch-metadata'
+      ];
+      
+      let titleElement = null;
+      for (const selector of titleSelectors) {
+        titleElement = document.querySelector(selector);
+        if (titleElement) break;
+      }
+      
       const title = titleElement ? titleElement.textContent.trim() : 'YouTube Video';
       sendResponse({ title: title });
       break;
@@ -153,21 +169,31 @@ function init() {
       }
       
       videoPlayer.addEventListener('volumechange', function() {
-        if (!adPlaying && savedVolume === null) {
-          lastKnownUserVolume = videoPlayer.volume;
-          // Update stored videoVolume when user changes it manually on YouTube
+        // During ads, save the volume change as user's intent for after the ad
+        if (adPlaying) {
+          // User changed volume during ad - update our saved volume for restoration
+          if (savedVolume !== null) {
+            savedVolume = videoPlayer.volume;
+          }
+          // Also update videoVolume preference if volume was changed by user
           videoVolume = videoPlayer.volume;
           chrome.storage.sync.set({ videoVolume: videoVolume });
-          
-          // Notify popup of volume change
-          chrome.runtime.sendMessage({
-            action: MessageAction.VOLUME_CHANGED,
-            videoVolume: videoVolume,
-            adVolume: adVolume
-          }).catch(() => {
-            // Popup might not be open, ignore error
-          });
+        } else {
+          // Not during ad - this is a normal video volume change
+          lastKnownUserVolume = videoPlayer.volume;
+          videoVolume = videoPlayer.volume;
+          chrome.storage.sync.set({ videoVolume: videoVolume });
         }
+        
+        // Always notify popup of volume changes for sync
+        chrome.runtime.sendMessage({
+          action: MessageAction.VOLUME_CHANGED,
+          videoVolume: videoVolume,
+          adVolume: adVolume
+        }).catch(() => {
+          // Popup might not be open, ignore error
+        });
+        
         // Update dev panel on any volume change
         updateDevPanel();
       });

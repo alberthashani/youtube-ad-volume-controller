@@ -9,18 +9,42 @@ document.addEventListener('DOMContentLoaded', function () {
   const container = document.querySelector('.container');
   
   let youtubeTab = null; // Store the active YouTube tab
+  let isUpdatingFromSync = false; // Flag to prevent feedback loops
+
+  // Debounce function to prevent rapid updates
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
 
   // Listen for volume change messages from content script
   chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    if (request.action === MessageAction.VOLUME_CHANGED && sender.tab && sender.tab.id === youtubeTab?.id) {
-      // Update sliders without triggering their event listeners
-      if (request.videoVolume !== undefined) {
-        videoVolumeSlider.value = request.videoVolume;
-        updateVolumeLabel(videoVolumeSlider, videoVolumeLabel);
-      }
-      if (request.adVolume !== undefined) {
-        adVolumeSlider.value = request.adVolume;
-        updateVolumeLabel(adVolumeSlider, adVolumeLabel);
+    if (request.action === MessageAction.VOLUME_CHANGED && sender.tab) {
+      // Only update if the message is from the tab we're controlling
+      if (!youtubeTab || sender.tab.id === youtubeTab.id) {
+        isUpdatingFromSync = true;
+        
+        // Update sliders with the new values
+        if (request.videoVolume !== undefined) {
+          videoVolumeSlider.value = request.videoVolume;
+          updateVolumeLabel(videoVolumeSlider, videoVolumeLabel);
+        }
+        if (request.adVolume !== undefined) {
+          adVolumeSlider.value = request.adVolume;
+          updateVolumeLabel(adVolumeSlider, adVolumeLabel);
+        }
+        
+        // Reset flag after a brief delay
+        setTimeout(() => {
+          isUpdatingFromSync = false;
+        }, 150);
       }
     }
   });
@@ -157,12 +181,25 @@ document.addEventListener('DOMContentLoaded', function () {
           }
         }
         
-        // Fetch video title
+        // Fetch video title with retry logic
         try {
           const titleResponse = await sendMessageToContentScript(youtubeTab.id, { action: MessageAction.GET_VIDEO_TITLE });
-          if (titleResponse && titleResponse.title) {
+          if (titleResponse && titleResponse.title && titleResponse.title !== 'YouTube Video') {
             videoVolumeTitle.textContent = titleResponse.title;
             videoVolumeTitle.title = titleResponse.title; // Show full title on hover
+          } else {
+            // If title fetch fails or returns default, retry after a delay
+            setTimeout(async () => {
+              try {
+                const retryResponse = await sendMessageToContentScript(youtubeTab.id, { action: MessageAction.GET_VIDEO_TITLE });
+                if (retryResponse && retryResponse.title && retryResponse.title !== 'YouTube Video') {
+                  videoVolumeTitle.textContent = retryResponse.title;
+                  videoVolumeTitle.title = retryResponse.title;
+                }
+              } catch (error) {
+                // Keep default "Video Volume" text if retry also fails
+              }
+            }, 1000);
           }
         } catch (error) {
           // If title fetch fails, keep default "Video Volume" text
@@ -175,29 +212,37 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize the popup
     initializePopup();
 
-    // Add event listeners with error handling
+    // Add event listeners with error handling and debouncing
     if (adVolumeSlider) {
-      adVolumeSlider.addEventListener('input', function () {
+      const handleAdVolumeChange = debounce(function() {
+        if (isUpdatingFromSync) return; // Don't send updates during sync
+        
         updateVolumeLabel(adVolumeSlider, adVolumeLabel);
         sendMessageToContentScript(youtubeTab.id, { 
           action: MessageAction.SET_AD_VOLUME, 
-          volume: adVolumeSlider.value 
+          volume: parseFloat(adVolumeSlider.value)
         }).catch(error => {
           // Failed to set ad volume
         });
-      });
+      }, 100);
+      
+      adVolumeSlider.addEventListener('input', handleAdVolumeChange);
     }
 
     if (videoVolumeSlider) {
-      videoVolumeSlider.addEventListener('input', function () {
+      const handleVideoVolumeChange = debounce(function() {
+        if (isUpdatingFromSync) return; // Don't send updates during sync
+        
         updateVolumeLabel(videoVolumeSlider, videoVolumeLabel);
         sendMessageToContentScript(youtubeTab.id, { 
           action: MessageAction.SET_VIDEO_VOLUME, 
-          volume: videoVolumeSlider.value 
+          volume: parseFloat(videoVolumeSlider.value)
         }).catch(error => {
           // Failed to set video volume
         });
-      });
+      }, 100);
+      
+      videoVolumeSlider.addEventListener('input', handleVideoVolumeChange);
     }
   });
 });
