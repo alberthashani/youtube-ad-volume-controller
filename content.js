@@ -25,7 +25,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
   switch (request.action) {
     case MessageAction.GET_VOLUMES:
-      sendResponse({ adVolume: adVolume });
+      sendResponse({ adVolume: adVolume, videoVolume: 1.0 });
       break;
 
     case MessageAction.SET_AD_VOLUME:
@@ -33,6 +33,13 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       chrome.storage.sync.set({ adVolume: adVolume });
       if (videoPlayer && adPlaying) {
         setVolume(videoPlayer, adVolume);
+      }
+      break;
+
+    case MessageAction.SET_VIDEO_VOLUME:
+      chrome.storage.sync.set({ videoVolume: request.volume });
+      if (videoPlayer && !adPlaying) {
+        setVolume(videoPlayer, request.volume);
       }
       break;
   }

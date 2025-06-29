@@ -2,12 +2,14 @@
 class VolumeManager {
   constructor() {
     this.adVolume = CONFIG.DEFAULT_AD_VOLUME;
+    this.videoVolume = CONFIG.DEFAULT_VIDEO_VOLUME;
     this.savedVolume = null; // User's volume before ad started
     this.savedMuted = null; // User's muted state before ad started
     this.lastKnownUserVolume = null;
     this.volumeSaveTimeout = null;
     
     this.loadAdVolumeFromStorage();
+    this.loadVideoVolumeFromStorage();
   }
 
   /**
@@ -17,6 +19,17 @@ class VolumeManager {
     chrome.storage.sync.get([CONFIG.STORAGE_KEYS.AD_VOLUME], (result) => {
       if (result.adVolume !== undefined) {
         this.adVolume = result.adVolume;
+      }
+    });
+  }
+
+  /**
+   * Load saved video volume from Chrome storage
+   */
+  loadVideoVolumeFromStorage() {
+    chrome.storage.sync.get([CONFIG.STORAGE_KEYS.VIDEO_VOLUME], (result) => {
+      if (result.videoVolume !== undefined) {
+        this.videoVolume = result.videoVolume;
       }
     });
   }
@@ -41,6 +54,28 @@ class VolumeManager {
    */
   getAdVolume() {
     return this.adVolume;
+  }
+
+  /**
+   * Set video volume preference and immediately apply if no ad is playing
+   * @param {number} volume - Volume level (0.0 to 1.0)
+   */
+  setVideoVolume(volume) {
+    this.videoVolume = volume;
+    chrome.storage.sync.set({ [CONFIG.STORAGE_KEYS.VIDEO_VOLUME]: volume });
+    
+    const videoPlayer = utils.getCurrentVideoElement();
+    if (videoPlayer && !window.adDetector?.isAdPlaying()) {
+      utils.setVolume(videoPlayer, volume);
+    }
+  }
+
+  /**
+   * Get current video volume
+   * @returns {number}
+   */
+  getVideoVolume() {
+    return this.videoVolume;
   }
 
   /**

@@ -2,6 +2,7 @@
 const CONFIG = {
   // Volume settings
   DEFAULT_AD_VOLUME: 0.05, // 5% volume for ads
+  DEFAULT_VIDEO_VOLUME: 1.0, // 100% volume for videos
   VOLUME_CHANGE_THRESHOLD: 0.01, // Minimum volume change to register
   
   // Timing constants (in milliseconds)
@@ -12,7 +13,8 @@ const CONFIG = {
   
   // Chrome storage keys
   STORAGE_KEYS: {
-    AD_VOLUME: 'adVolume'
+    AD_VOLUME: 'adVolume',
+    VIDEO_VOLUME: 'videoVolume'
   },
   
   // YouTube DOM selectors

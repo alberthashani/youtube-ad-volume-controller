@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', function () {
   const adVolumeSlider = document.getElementById('adVolumeSlider');
   const adVolumeLabel = document.getElementById('adVolumeLabel');
+  const videoVolumeSlider = document.getElementById('videoVolumeSlider');
+  const videoVolumeLabel = document.getElementById('videoVolumeLabel');
   const controls = document.getElementById('controls');
   const notYouTubeMessage = document.getElementById('notYouTubeMessage');
   const container = document.querySelector('.container');
@@ -11,11 +13,15 @@ document.addEventListener('DOMContentLoaded', function () {
     label.textContent = Math.round(slider.value * 100) + '%';
   }
 
-  // Load saved ad volume first
-  chrome.storage.sync.get(['adVolume'], function(result) {
+  // Load saved volumes first
+  chrome.storage.sync.get(['adVolume', 'videoVolume'], function(result) {
     if (result.adVolume !== undefined) {
       adVolumeSlider.value = result.adVolume;
       updateVolumeLabel(adVolumeSlider, adVolumeLabel);
+    }
+    if (result.videoVolume !== undefined) {
+      videoVolumeSlider.value = result.videoVolume;
+      updateVolumeLabel(videoVolumeSlider, videoVolumeLabel);
     }
   });
 
@@ -126,6 +132,10 @@ document.addEventListener('DOMContentLoaded', function () {
             adVolumeSlider.value = response.adVolume;
             updateVolumeLabel(adVolumeSlider, adVolumeLabel);
           }
+          if (response.videoVolume !== undefined) {
+            videoVolumeSlider.value = response.videoVolume;
+            updateVolumeLabel(videoVolumeSlider, videoVolumeLabel);
+          }
         }
       } catch (error) {
         // Failed to initialize popup - still allow the popup to work with stored values
@@ -144,6 +154,18 @@ document.addEventListener('DOMContentLoaded', function () {
           volume: adVolumeSlider.value 
         }).catch(error => {
           // Failed to set ad volume
+        });
+      });
+    }
+
+    if (videoVolumeSlider) {
+      videoVolumeSlider.addEventListener('input', function () {
+        updateVolumeLabel(videoVolumeSlider, videoVolumeLabel);
+        sendMessageToContentScript(youtubeTab.id, { 
+          action: MessageAction.SET_VIDEO_VOLUME, 
+          volume: videoVolumeSlider.value 
+        }).catch(error => {
+          // Failed to set video volume
         });
       });
     }

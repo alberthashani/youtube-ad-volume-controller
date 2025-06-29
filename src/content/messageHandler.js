@@ -31,12 +31,18 @@ class MessageHandler {
     switch (request.action) {
       case MessageAction.GET_VOLUMES:
         sendResponse({ 
-          adVolume: this.volumeManager.getAdVolume() 
+          adVolume: this.volumeManager.getAdVolume(),
+          videoVolume: this.volumeManager.getVideoVolume()
         });
         break;
 
       case MessageAction.SET_AD_VOLUME:
         this.volumeManager.setAdVolume(request.volume);
+        this.devPanel.update();
+        break;
+
+      case MessageAction.SET_VIDEO_VOLUME:
+        this.volumeManager.setVideoVolume(request.volume);
         this.devPanel.update();
         break;
 

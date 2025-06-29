@@ -1,8 +1,8 @@
 // Message action constants for Chrome extension communication
 const MessageAction = {
   GET_VOLUMES: 'getVolumes',
-  SET_AD_VOLUME: 'setAdVolume'
-  // Removed unused SET_VIDEO_VOLUME
+  SET_AD_VOLUME: 'setAdVolume',
+  SET_VIDEO_VOLUME: 'setVideoVolume'
 };
 
 // Make it available to other scripts
