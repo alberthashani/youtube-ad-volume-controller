@@ -92,6 +92,7 @@ class DevPanel {
       <div>Volume: ${userIntendedVolume}</div>
       <div>Realtime VideoPlayer volume: ${currentVolume}%</div>
       <div>Ad volume: ${Math.round(this.volumeManager.getAdVolume() * 100)}%</div>
+      <div>Video volume: ${Math.round(this.volumeManager.getVideoVolume() * 100)}%</div>
       <div>Ad Playing: ${this.adDetector.isAdPlaying()}</div>
     `;
   }
