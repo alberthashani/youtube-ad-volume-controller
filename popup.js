@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
   const adVolumeSlider = document.getElementById('adVolumeSlider');
   const adVolumeLabel = document.getElementById('adVolumeLabel');
-  const videoVolumeSlider = document.getElementById('videoVolumeSlider');
   const videoVolumeLabel = document.getElementById('videoVolumeLabel');
   const videoVolumeTitle = document.getElementById('videoVolumeTitle');
   const controls = document.getElementById('controls');
@@ -33,8 +32,7 @@ document.addEventListener('DOMContentLoaded', function () {
         
         // Update sliders with the new values
         if (request.videoVolume !== undefined) {
-          videoVolumeSlider.value = request.videoVolume;
-          updateVolumeLabel(videoVolumeSlider, videoVolumeLabel);
+          updateVolumeLabel(request.videoVolume, videoVolumeLabel);
         }
         if (request.adVolume !== undefined) {
           adVolumeSlider.value = request.adVolume;
@@ -49,8 +47,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  function updateVolumeLabel(slider, label) {
-    label.textContent = Math.round(slider.value * 100) + '%';
+  function updateVolumeLabel(sliderOrValue, label) {
+    // Handle both slider objects and direct values
+    const value = typeof sliderOrValue === 'number' ? sliderOrValue : sliderOrValue.value;
+    label.textContent = Math.round(value * 100) + '%';
   }
 
   // Load saved volumes first with defaults
@@ -64,8 +64,8 @@ document.addEventListener('DOMContentLoaded', function () {
     adVolumeSlider.value = adVol;
     updateVolumeLabel(adVolumeSlider, adVolumeLabel);
     
-    videoVolumeSlider.value = videoVol;
-    updateVolumeLabel(videoVolumeSlider, videoVolumeLabel);
+    // Update video volume display (no slider, just display)
+    updateVolumeLabel(videoVol, videoVolumeLabel);
   });
 
   // Find YouTube tabs across all windows
@@ -176,8 +176,7 @@ document.addEventListener('DOMContentLoaded', function () {
             updateVolumeLabel(adVolumeSlider, adVolumeLabel);
           }
           if (response.videoVolume !== undefined) {
-            videoVolumeSlider.value = response.videoVolume;
-            updateVolumeLabel(videoVolumeSlider, videoVolumeLabel);
+            updateVolumeLabel(response.videoVolume, videoVolumeLabel);
           }
         }
         
@@ -227,22 +226,6 @@ document.addEventListener('DOMContentLoaded', function () {
       }, 100);
       
       adVolumeSlider.addEventListener('input', handleAdVolumeChange);
-    }
-
-    if (videoVolumeSlider) {
-      const handleVideoVolumeChange = debounce(function() {
-        if (isUpdatingFromSync) return; // Don't send updates during sync
-        
-        updateVolumeLabel(videoVolumeSlider, videoVolumeLabel);
-        sendMessageToContentScript(youtubeTab.id, { 
-          action: MessageAction.SET_VIDEO_VOLUME, 
-          volume: parseFloat(videoVolumeSlider.value)
-        }).catch(error => {
-          // Failed to set video volume
-        });
-      }, 100);
-      
-      videoVolumeSlider.addEventListener('input', handleVideoVolumeChange);
     }
   });
 });
