@@ -10,6 +10,52 @@ class VolumeManager {
     
     this.loadAdVolumeFromStorage();
     this.loadVideoVolumeFromStorage();
+    this.setupVolumeChangeListener();
+  }
+
+  /**
+   * Setup volume change listener for bidirectional sync
+   */
+  setupVolumeChangeListener() {
+    // Wait for video element to be available, then attach listener
+    const attachListener = () => {
+      const videoPlayer = utils.getCurrentVideoElement();
+      if (videoPlayer && !videoPlayer.hasVolumeListener) {
+        videoPlayer.hasVolumeListener = true; // Prevent duplicate listeners
+        
+        videoPlayer.addEventListener('volumechange', () => {
+          // During ads, save the volume change as user's intent for after the ad
+          if (window.adDetector?.isAdPlaying()) {
+            // User changed volume during ad - update our saved volume for restoration
+            if (this.savedVolume !== null) {
+              this.savedVolume = videoPlayer.volume;
+            }
+            // Also update videoVolume preference if volume was changed by user
+            this.videoVolume = videoPlayer.volume;
+            chrome.storage.sync.set({ [CONFIG.STORAGE_KEYS.VIDEO_VOLUME]: this.videoVolume });
+          } else {
+            // Not during ad - this is a normal video volume change
+            this.lastKnownUserVolume = videoPlayer.volume;
+            this.videoVolume = videoPlayer.volume;
+            chrome.storage.sync.set({ [CONFIG.STORAGE_KEYS.VIDEO_VOLUME]: this.videoVolume });
+          }
+          
+          // Always notify popup of volume changes for sync
+          chrome.runtime.sendMessage({
+            action: MessageAction.VOLUME_CHANGED,
+            videoVolume: this.videoVolume,
+            adVolume: this.adVolume
+          }).catch(() => {
+            // Popup might not be open, ignore error
+          });
+        });
+      }
+    };
+    
+    // Try to attach immediately, and retry if video not ready
+    attachListener();
+    setTimeout(attachListener, 1000);
+    setTimeout(attachListener, 3000);
   }
 
   /**

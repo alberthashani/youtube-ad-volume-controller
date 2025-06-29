@@ -41,6 +41,28 @@ class MessageHandler {
         this.devPanel.update();
         break;
 
+      case MessageAction.GET_VIDEO_TITLE:
+        // Try multiple selectors to find video title
+        const titleSelectors = [
+          'h1.ytd-watch-metadata yt-formatted-string',
+          'h1.ytd-video-primary-info-renderer yt-formatted-string', 
+          'ytd-watch-metadata h1 yt-formatted-string',
+          'ytd-video-primary-info-renderer h1',
+          'h1.style-scope.ytd-video-primary-info-renderer',
+          '.ytd-watch-metadata h1',
+          'h1.ytd-watch-metadata'
+        ];
+        
+        let titleElement = null;
+        for (const selector of titleSelectors) {
+          titleElement = document.querySelector(selector);
+          if (titleElement) break;
+        }
+        
+        const title = titleElement ? titleElement.textContent.trim() : 'YouTube Video';
+        sendResponse({ title: title });
+        break;
+
       case MessageAction.SET_VIDEO_VOLUME:
         this.volumeManager.setVideoVolume(request.volume);
         this.devPanel.update();
