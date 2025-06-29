@@ -4,15 +4,19 @@ let playerElement = null;
 let adPlaying = false;
 let savedVolume = null;
 let savedMuted = null;
-let adVolume = 0.05;
+let adVolume = 0.05; // Default 5%
+let videoVolume = 1.0; // Default 100%
 let volumeSaveTimeout = null;
 let lastKnownUserVolume = null;
 
-chrome.storage.sync.get(['adVolume'], function(result) {
+chrome.storage.sync.get(['adVolume', 'videoVolume'], function(result) {
   if (result.adVolume !== undefined) {
     adVolume = result.adVolume;
-    updateDevPanel();
   }
+  if (result.videoVolume !== undefined) {
+    videoVolume = result.videoVolume;
+  }
+  updateDevPanel();
 });
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
@@ -25,7 +29,13 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
   switch (request.action) {
     case MessageAction.GET_VOLUMES:
-      sendResponse({ adVolume: adVolume, videoVolume: 1.0 });
+      sendResponse({ adVolume: adVolume, videoVolume: videoVolume });
+      break;
+
+    case MessageAction.GET_VIDEO_TITLE:
+      const titleElement = document.querySelector('h1.ytd-watch-metadata yt-formatted-string');
+      const title = titleElement ? titleElement.textContent.trim() : 'YouTube Video';
+      sendResponse({ title: title });
       break;
 
     case MessageAction.SET_AD_VOLUME:
@@ -37,9 +47,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       break;
 
     case MessageAction.SET_VIDEO_VOLUME:
-      chrome.storage.sync.set({ videoVolume: request.volume });
+      videoVolume = request.volume;
+      chrome.storage.sync.set({ videoVolume: videoVolume });
       if (videoPlayer && !adPlaying) {
-        setVolume(videoPlayer, request.volume);
+        setVolume(videoPlayer, videoVolume);
       }
       break;
   }
@@ -75,6 +86,9 @@ function restoreSavedVolumeState(videoPlayer) {
     }
     savedVolume = null;
     savedMuted = null;
+  } else if (videoPlayer) {
+    // Apply video volume preference when not in ad mode
+    setVolume(videoPlayer, videoVolume);
   }
 }
 
@@ -133,9 +147,26 @@ function init() {
 
     const videoPlayer = document.querySelector('video');
     if (videoPlayer) {
+      // Apply video volume preference on initial load
+      if (!adPlaying) {
+        setVolume(videoPlayer, videoVolume);
+      }
+      
       videoPlayer.addEventListener('volumechange', function() {
         if (!adPlaying && savedVolume === null) {
           lastKnownUserVolume = videoPlayer.volume;
+          // Update stored videoVolume when user changes it manually on YouTube
+          videoVolume = videoPlayer.volume;
+          chrome.storage.sync.set({ videoVolume: videoVolume });
+          
+          // Notify popup of volume change
+          chrome.runtime.sendMessage({
+            action: MessageAction.VOLUME_CHANGED,
+            videoVolume: videoVolume,
+            adVolume: adVolume
+          }).catch(() => {
+            // Popup might not be open, ignore error
+          });
         }
         // Update dev panel on any volume change
         updateDevPanel();

@@ -2,7 +2,9 @@
 const MessageAction = {
   GET_VOLUMES: 'getVolumes',
   SET_AD_VOLUME: 'setAdVolume',
-  SET_VIDEO_VOLUME: 'setVideoVolume'
+  SET_VIDEO_VOLUME: 'setVideoVolume',
+  GET_VIDEO_TITLE: 'getVideoTitle',
+  VOLUME_CHANGED: 'volumeChanged'
 };
 
 // Make it available to other scripts

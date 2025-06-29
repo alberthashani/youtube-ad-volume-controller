@@ -3,26 +3,45 @@ document.addEventListener('DOMContentLoaded', function () {
   const adVolumeLabel = document.getElementById('adVolumeLabel');
   const videoVolumeSlider = document.getElementById('videoVolumeSlider');
   const videoVolumeLabel = document.getElementById('videoVolumeLabel');
+  const videoVolumeTitle = document.getElementById('videoVolumeTitle');
   const controls = document.getElementById('controls');
   const notYouTubeMessage = document.getElementById('notYouTubeMessage');
   const container = document.querySelector('.container');
   
   let youtubeTab = null; // Store the active YouTube tab
 
+  // Listen for volume change messages from content script
+  chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === MessageAction.VOLUME_CHANGED && sender.tab && sender.tab.id === youtubeTab?.id) {
+      // Update sliders without triggering their event listeners
+      if (request.videoVolume !== undefined) {
+        videoVolumeSlider.value = request.videoVolume;
+        updateVolumeLabel(videoVolumeSlider, videoVolumeLabel);
+      }
+      if (request.adVolume !== undefined) {
+        adVolumeSlider.value = request.adVolume;
+        updateVolumeLabel(adVolumeSlider, adVolumeLabel);
+      }
+    }
+  });
+
   function updateVolumeLabel(slider, label) {
     label.textContent = Math.round(slider.value * 100) + '%';
   }
 
-  // Load saved volumes first
+  // Load saved volumes first with defaults
   chrome.storage.sync.get(['adVolume', 'videoVolume'], function(result) {
-    if (result.adVolume !== undefined) {
-      adVolumeSlider.value = result.adVolume;
-      updateVolumeLabel(adVolumeSlider, adVolumeLabel);
-    }
-    if (result.videoVolume !== undefined) {
-      videoVolumeSlider.value = result.videoVolume;
-      updateVolumeLabel(videoVolumeSlider, videoVolumeLabel);
-    }
+    const defaultAdVolume = 0.05; // 5%
+    const defaultVideoVolume = 1.0; // 100%
+    
+    const adVol = result.adVolume !== undefined ? result.adVolume : defaultAdVolume;
+    const videoVol = result.videoVolume !== undefined ? result.videoVolume : defaultVideoVolume;
+    
+    adVolumeSlider.value = adVol;
+    updateVolumeLabel(adVolumeSlider, adVolumeLabel);
+    
+    videoVolumeSlider.value = videoVol;
+    updateVolumeLabel(videoVolumeSlider, videoVolumeLabel);
   });
 
   // Find YouTube tabs across all windows
@@ -136,6 +155,17 @@ document.addEventListener('DOMContentLoaded', function () {
             videoVolumeSlider.value = response.videoVolume;
             updateVolumeLabel(videoVolumeSlider, videoVolumeLabel);
           }
+        }
+        
+        // Fetch video title
+        try {
+          const titleResponse = await sendMessageToContentScript(youtubeTab.id, { action: MessageAction.GET_VIDEO_TITLE });
+          if (titleResponse && titleResponse.title) {
+            videoVolumeTitle.textContent = titleResponse.title;
+            videoVolumeTitle.title = titleResponse.title; // Show full title on hover
+          }
+        } catch (error) {
+          // If title fetch fails, keep default "Video Volume" text
         }
       } catch (error) {
         // Failed to initialize popup - still allow the popup to work with stored values

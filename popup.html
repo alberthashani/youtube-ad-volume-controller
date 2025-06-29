@@ -97,10 +97,14 @@
       font-weight: 600;
       color: #1e293b;
       letter-spacing: -0.01em;
+      max-width: 180px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
 
     .volume-value {
-      background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+      background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
       color: white;
       padding: 6px 14px;
       border-radius: 20px;
@@ -108,12 +112,12 @@
       font-weight: 600;
       min-width: 50px;
       text-align: center;
-      box-shadow: 0 2px 8px rgba(255, 0, 0, 0.25);
+      box-shadow: 0 2px 8px rgba(234, 179, 8, 0.25);
     }
 
     .volume-value.video-volume {
-      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+      background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+      box-shadow: 0 2px 8px rgba(255, 0, 0, 0.25);
     }
 
     .slider-container {
@@ -139,50 +143,50 @@
       width: 20px;
       height: 20px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+      background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
       cursor: pointer;
-      box-shadow: 0 2px 6px rgba(255, 0, 0, 0.4);
+      box-shadow: 0 2px 6px rgba(234, 179, 8, 0.4);
       transition: all 0.2s ease;
       border: 2px solid white;
     }
 
     input[type="range"].video-volume::-webkit-slider-thumb {
-      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+      background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+      box-shadow: 0 2px 6px rgba(255, 0, 0, 0.4);
     }
 
     input[type="range"]::-webkit-slider-thumb:hover {
       transform: scale(1.1);
-      box-shadow: 0 4px 12px rgba(255, 0, 0, 0.5);
+      box-shadow: 0 4px 12px rgba(234, 179, 8, 0.5);
     }
 
     input[type="range"].video-volume::-webkit-slider-thumb:hover {
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.5);
+      box-shadow: 0 4px 12px rgba(255, 0, 0, 0.5);
     }
 
     input[type="range"]::-moz-range-thumb {
       width: 20px;
       height: 20px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+      background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
       cursor: pointer;
       border: 2px solid white;
-      box-shadow: 0 2px 6px rgba(255, 0, 0, 0.4);
+      box-shadow: 0 2px 6px rgba(234, 179, 8, 0.4);
       transition: all 0.2s ease;
     }
 
     input[type="range"].video-volume::-moz-range-thumb {
-      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+      background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+      box-shadow: 0 2px 6px rgba(255, 0, 0, 0.4);
     }
 
     input[type="range"]::-moz-range-thumb:hover {
       transform: scale(1.1);
-      box-shadow: 0 4px 12px rgba(255, 0, 0, 0.5);
+      box-shadow: 0 4px 12px rgba(234, 179, 8, 0.5);
     }
 
     input[type="range"].video-volume::-moz-range-thumb:hover {
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.5);
+      box-shadow: 0 4px 12px rgba(255, 0, 0, 0.5);
     }
 
     .volume-indicators {
@@ -272,11 +276,11 @@
       <div id="controls">
         <div class="volume-control">
           <div class="volume-label">
-            <span class="volume-title">Ad Volume</span>
-            <span class="volume-value" id="adVolumeLabel">0%</span>
+            <span class="volume-title" id="videoVolumeTitle">Video Volume</span>
+            <span class="volume-value video-volume" id="videoVolumeLabel">100%</span>
           </div>
           <div class="slider-container">
-            <input type="range" id="adVolumeSlider" min="0" max="1" step="0.01">
+            <input type="range" id="videoVolumeSlider" class="video-volume" min="0" max="1" step="0.01" value="1">
           </div>
           <div class="volume-indicators">
             <span class="volume-icon volume-low">0%</span>
@@ -286,11 +290,11 @@
         
         <div class="volume-control">
           <div class="volume-label">
-            <span class="volume-title">Video Volume</span>
-            <span class="volume-value video-volume" id="videoVolumeLabel">100%</span>
+            <span class="volume-title">Ad Volume</span>
+            <span class="volume-value" id="adVolumeLabel">5%</span>
           </div>
           <div class="slider-container">
-            <input type="range" id="videoVolumeSlider" class="video-volume" min="0" max="1" step="0.01" value="1">
+            <input type="range" id="adVolumeSlider" min="0" max="1" step="0.01">
           </div>
           <div class="volume-indicators">
             <span class="volume-icon volume-low">0%</span>
