@@ -15,7 +15,6 @@ class AdDetector {
 
     if (this.playerElement) {
       this.setupObserver();
-      this.setupVideoVolumeListener();
       this.checkAd();
     } else {
       setTimeout(() => this.init(), CONFIG.INIT_RETRY_DELAY);
@@ -35,20 +34,6 @@ class AdDetector {
     });
 
     this.observer.observe(this.playerElement, { attributes: true });
-  }
-
-  /**
-   * Track user volume changes during regular content (not ads)
-   */
-  setupVideoVolumeListener() {
-    const videoPlayer = utils.getCurrentVideoElement();
-    if (videoPlayer) {
-      videoPlayer.addEventListener('volumechange', () => {
-        if (!this.adPlaying && !this.volumeManager.hasVolumeStateSaved()) {
-          this.volumeManager.updateLastKnownUserVolume(videoPlayer.volume);
-        }
-      });
-    }
   }
 
   /**
