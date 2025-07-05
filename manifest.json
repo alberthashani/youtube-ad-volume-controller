@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "YouTube Ad Volume Controller",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Automatically detects YouTube ads and reduces their volume to improve your listening experience.",
   "permissions": [
     "tabs",
