@@ -4,7 +4,7 @@ const CONFIG = {
   DEBUG_MODE: false, // Master switch for debug features (logging and debug panel)
   
   // Volume settings
-  DEFAULT_AD_VOLUME: 0.00, // 0% volume for ads
+  DEFAULT_AD_VOLUME: 0.0, // 0% volume for ads
   VOLUME_CHANGE_THRESHOLD: 0.01, // Minimum volume change to register
   
   // Timing constants (in milliseconds)
