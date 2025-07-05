@@ -1,6 +1,8 @@
-# YouTube Ad Volume Controller | Chrome Extension
+# YouTube Ad Volume Controller
 
 A Chrome extension that automatically adjusts YouTube ad volume to your preferred level. No more sudden loud interruptions while watching videos. The extension detects when ads play, lowers the volume to your chosen setting, then restores the original volume when the ad ends.
+
+> **Cross-Browser Alternative**: Looking for a solution that works in any browser? Check out our [userscript version](./userscript/) that works with Safari, Firefox, Edge, and any browser with userscript support!
 
 ## Features
 
@@ -21,6 +23,8 @@ A Chrome extension that automatically adjusts YouTube ad volume to your preferre
 3. Enable "Developer mode" (top-right toggle)
 4. Click "Load unpacked" and select the extension folder
 5. The extension icon will appear in your Chrome toolbar
+
+> **Alternative**: For other browsers, see the [userscript version](./userscript/) with installation instructions for Safari, Firefox, Edge, and more.
 
 ## Usage
 
