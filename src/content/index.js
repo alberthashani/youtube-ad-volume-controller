@@ -3,8 +3,8 @@ class YouTubeAdVolumeController {
   constructor() {
     this.volumeManager = new VolumeManager();
     this.adDetector = new AdDetector(this.volumeManager);
-    this.devPanel = new DevPanel(this.volumeManager, this.adDetector);
-    this.messageHandler = new MessageHandler(this.volumeManager, this.devPanel);
+    this.debugPanel = new DebugPanel(this.volumeManager, this.adDetector);
+    this.messageHandler = new MessageHandler(this.volumeManager, this.debugPanel);
     
     this.periodicCheckInterval = null;
     
@@ -25,6 +25,7 @@ class YouTubeAdVolumeController {
     
     window.adDetector = this.adDetector;
     window.volumeManager = this.volumeManager;
+    window.debugPanel = this.debugPanel;
   }
 
   /**
@@ -43,9 +44,9 @@ class YouTubeAdVolumeController {
     const videoPlayer = utils.getCurrentVideoElement();
     
     if (this.volumeManager.hasVolumeStateSaved() && !this.adDetector.isAdPlaying()) {
-      utils.log('Warning - savedVolume exists but no ad playing. Cleaning up.');
+      this.debugPanel.log('Warning - savedVolume exists but no ad playing. Cleaning up.');
       this.volumeManager.clearSavedState();
-      this.devPanel.update();
+      this.debugPanel.update();
     }
     
     if (videoPlayer && 
@@ -68,7 +69,7 @@ class YouTubeAdVolumeController {
   cleanup() {
     this.volumeManager.cleanup();
     this.adDetector.cleanup();
-    this.devPanel.cleanup();
+    this.debugPanel.cleanup();
     
     if (this.periodicCheckInterval) {
       clearInterval(this.periodicCheckInterval);

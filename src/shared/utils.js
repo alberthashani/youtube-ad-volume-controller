@@ -52,24 +52,6 @@ const utils = {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => func.apply(this, args), delay);
     };
-  },
-
-  /**
-   * Check if dev panel is currently visible (used for conditional logging)
-   * @returns {boolean}
-   */
-  isDevModeActive() {
-    return document.getElementById(CONFIG.DEV_PANEL.ID) !== null;
-  },
-
-  /**
-   * Conditional logging - only shows messages when dev panel is active
-   * @param {...any} args - Arguments to log
-   */
-  log(...args) {
-    if (this.isDevModeActive()) {
-      console.log('YouTube Ad Volume Controller:', ...args);
-    }
   }
 };
 

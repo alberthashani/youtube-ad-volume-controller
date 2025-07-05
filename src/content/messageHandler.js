@@ -1,8 +1,8 @@
 // Message Handler - Manages communication between popup and content script
 class MessageHandler {
-  constructor(volumeManager, devPanel) {
+  constructor(volumeManager, debugPanel) {
     this.volumeManager = volumeManager;
-    this.devPanel = devPanel;
+    this.debugPanel = debugPanel;
     
     this.setupMessageListener();
   }
@@ -36,12 +36,18 @@ class MessageHandler {
         break;
 
       case MessageAction.SET_AD_VOLUME:
-        this.volumeManager.setAdVolume(request.volume);
-        this.devPanel.update();
+        const oldAdVolume = this.volumeManager.getAdVolume();
+        const newAdVolume = parseFloat(request.volume); // Ensure numeric value
+        this.debugPanel.logDetailedVolumeState('POPUP_AD_VOLUME_CHANGE', {
+          oldValue: oldAdVolume,
+          newValue: newAdVolume
+        });
+        this.volumeManager.setAdVolume(newAdVolume);
+        this.debugPanel.update();
         break;
 
       default:
-        utils.log('Unknown message action:', request.action);
+        this.debugPanel.log('Unknown message action:', request.action);
         break;
     }
 

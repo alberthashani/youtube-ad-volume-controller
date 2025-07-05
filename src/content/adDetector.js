@@ -35,6 +35,33 @@ class AdDetector {
     });
 
     this.observer.observe(this.playerElement, { attributes: true });
+    
+    // Initial volume sync check
+    this.checkInitialVolumeSync();
+  }
+
+  /**
+   * Check for volume sync issues during initialization
+   */
+  checkInitialVolumeSync() {
+    const videoPlayer = utils.getCurrentVideoElement();
+    if (videoPlayer && this.volumeManager.getLastKnownUserVolume() !== null) {
+      const currentVolume = videoPlayer.volume;
+      const lastKnownVolume = this.volumeManager.getLastKnownUserVolume();
+      const volumeDifference = Math.abs(currentVolume - lastKnownVolume);
+      
+      if (volumeDifference > CONFIG.VOLUME_CHANGE_THRESHOLD) {
+        window.debugPanel?.logDetailedVolumeState('INIT_VOLUME_SYNC_DISCREPANCY', {
+          currentVideoVolume: currentVolume,
+          lastKnownUserVolume: lastKnownVolume,
+          difference: volumeDifference,
+          note: 'Initial volume sync discrepancy detected'
+        });
+        
+        // Update lastKnownUserVolume to current video volume
+        this.volumeManager.updateLastKnownUserVolume(currentVolume);
+      }
+    }
   }
 
   /**
@@ -43,9 +70,22 @@ class AdDetector {
   setupVideoVolumeListener() {
     const videoPlayer = utils.getCurrentVideoElement();
     if (videoPlayer) {
+      let lastLoggedVolume = videoPlayer.volume;
+      
       videoPlayer.addEventListener('volumechange', () => {
         if (!this.adPlaying && !this.volumeManager.hasVolumeStateSaved()) {
-          this.volumeManager.updateLastKnownUserVolume(videoPlayer.volume);
+          const newVolume = videoPlayer.volume;
+          
+          // Log user volume changes (avoid logging tiny changes from our own volume setting)
+          if (Math.abs(newVolume - lastLoggedVolume) > CONFIG.VOLUME_CHANGE_THRESHOLD) {
+            window.debugPanel?.logDetailedVolumeState('USER_VOLUME_CHANGE', {
+              oldValue: lastLoggedVolume,
+              newValue: newVolume
+            });
+            lastLoggedVolume = newVolume;
+          }
+          
+          this.volumeManager.updateLastKnownUserVolume(newVolume);
         }
       });
     }
@@ -91,12 +131,34 @@ class AdDetector {
    * @param {HTMLVideoElement} videoPlayer 
    */
   onAdStart(videoPlayer) {
+    // Check for volume sync discrepancy and log if found
+    if (videoPlayer && this.volumeManager.getLastKnownUserVolume() !== null) {
+      const currentVolume = videoPlayer.volume;
+      const lastKnownVolume = this.volumeManager.getLastKnownUserVolume();
+      const volumeDifference = Math.abs(currentVolume - lastKnownVolume);
+      
+      if (volumeDifference > CONFIG.VOLUME_CHANGE_THRESHOLD) {
+        window.debugPanel?.logDetailedVolumeState('VOLUME_SYNC_DISCREPANCY', {
+          currentVideoVolume: currentVolume,
+          lastKnownUserVolume: lastKnownVolume,
+          difference: volumeDifference,
+          note: 'Video volume differs from last known user volume'
+        });
+      }
+    }
+    
+    // Log BEFORE ad transition
+    window.debugPanel?.logDetailedVolumeState('PRE_AD_START');
+    
     this.adPlaying = true;
     if (videoPlayer) {
       this.volumeManager.saveCurrentVolumeState(videoPlayer);
       // Apply ad volume after short delay
       setTimeout(() => {
         utils.setVolume(videoPlayer, this.volumeManager.getAdVolume());
+        
+        // Log AFTER ad transition
+        window.debugPanel?.logDetailedVolumeState('POST_AD_START');
       }, CONFIG.AD_VOLUME_APPLY_DELAY);
     }
   }
@@ -108,6 +170,9 @@ class AdDetector {
   onAdEnd(videoPlayer) {
     this.adPlaying = false;
     this.volumeManager.restoreSavedVolumeState(videoPlayer);
+    
+    // Log AFTER ad ends and volume is restored
+    window.debugPanel?.logDetailedVolumeState('POST_AD_END');
   }
 
   /**

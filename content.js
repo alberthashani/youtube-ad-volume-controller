@@ -1,5 +1,5 @@
-let devModeEnabled = true;
-let devPanel = null;
+let devModeEnabled = false; // Master switch for debug features (logging and debug panel)
+let debugPanel = null;
 let playerElement = null;
 let adPlaying = false;
 let savedVolume = null;
@@ -36,7 +36,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       }
       break;
   }
-  updateDevPanel();
+  updateDebugPanel();
 });
 
 function setVolume(videoPlayer, volume) {
@@ -56,7 +56,7 @@ function saveCurrentVolumeState(videoPlayer) {
     // Use lastKnownUserVolume if available and recent, otherwise current volume
     savedVolume = lastKnownUserVolume !== null ? lastKnownUserVolume : videoPlayer.volume;
     savedMuted = videoPlayer.muted;
-    updateDevPanel(); // Update panel immediately after saving
+    updateDebugPanel(); // Update panel immediately after saving
   }
 }
 
@@ -94,20 +94,20 @@ function checkAd() {
       // Set ad volume after a very short delay
       setTimeout(() => {
         setVolume(videoPlayer, adVolume);
-        updateDevPanel();
+        updateDebugPanel();
       }, 10); // Reduced delay from 50ms to 10ms
     }
   } else if (!isAdShowing && !isAdSequence && adPlaying) {
     adPlaying = false;
     restoreSavedVolumeState(videoPlayer);
-    updateDevPanel();
+    updateDebugPanel();
   } else if (isAdShowing && adPlaying) {
     if (videoPlayer && Math.abs(videoPlayer.volume - adVolume) > 0.01) {
       setVolume(videoPlayer, adVolume);
     }
   }
 
-  updateDevPanel();
+  updateDebugPanel();
 }
 
 function init() {
@@ -131,7 +131,7 @@ function init() {
           lastKnownUserVolume = videoPlayer.volume;
         }
         // Update dev panel on any volume change
-        updateDevPanel();
+        updateDebugPanel();
       });
     }
 
@@ -157,10 +157,10 @@ setInterval(function() {
   const videoPlayer = document.querySelector('video');
   
   if (savedVolume !== null && !adPlaying) {
-    utils.log('Warning - savedVolume exists but no ad playing. Cleaning up.');
+    console.log('YouTube Ad Volume Controller: Warning - savedVolume exists but no ad playing. Cleaning up.');
     savedVolume = null;
     savedMuted = null;
-    updateDevPanel();
+    updateDebugPanel();
   }
   
   if (videoPlayer && !adPlaying && savedVolume === null) {
@@ -168,12 +168,12 @@ setInterval(function() {
   }
 }, 1000);
 
-function createDevPanel() {
-  if (devPanel) return;
+function createDebugPanel() {
+  if (debugPanel || !devModeEnabled) return;
   
-  devPanel = document.createElement('div');
-  devPanel.id = 'yt-volume-control-dev-panel';
-  devPanel.style.cssText = `
+  debugPanel = document.createElement('div');
+  debugPanel.id = 'yt-volume-control-debug-panel';
+  debugPanel.style.cssText = `
     position: fixed;
     bottom: 20px;
     right: 20px;
@@ -186,13 +186,13 @@ function createDevPanel() {
     font-size: 14px;
   `;
   
-  updateDevPanel();
-  document.body.appendChild(devPanel);
+  updateDebugPanel();
+  document.body.appendChild(debugPanel);
 }
 
-// Update the updateDevPanel function in content.js
-function updateDevPanel() {
-  if (!devPanel) return;
+// Update the updateDebugPanel function in content.js
+function updateDebugPanel() {
+  if (!debugPanel) return;
   const videoPlayer = document.querySelector('video');
   
   const currentVolume = videoPlayer ? Math.round(videoPlayer.volume * 100) : 0;
@@ -207,8 +207,8 @@ function updateDevPanel() {
     userIntendedVolume = currentVolume + '%';
   }
   
-  devPanel.innerHTML = `
-    <div>Dev Mode Active</div>
+  debugPanel.innerHTML = `
+    <div>Debug Mode Active</div>
     <div>Volume: ${userIntendedVolume}</div>
     <div>Realtime VideoPlayer volume: ${currentVolume}%</div>
     <div>Ad volume: ${Math.round(adVolume * 100)}%</div>
@@ -218,15 +218,17 @@ function updateDevPanel() {
 
 // Add keyboard shortcut listener
 document.addEventListener('keydown', function(e) {
-  // Ctrl+Shift+D to toggle dev panel
+  // Ctrl+Shift+D to toggle debug panel
   if (e.ctrlKey && e.shiftKey && e.key === 'D') {
-    if (devPanel) {
-      devPanel.remove();
-      devPanel = null;
+    if (!devModeEnabled) return; // Master switch must be enabled
+    
+    if (debugPanel) {
+      debugPanel.remove();
+      debugPanel = null;
     } else {
-      createDevPanel();
+      createDebugPanel();
       // Update panel every second
-      setInterval(updateDevPanel, 1000);
+      setInterval(updateDebugPanel, 1000);
     }
   }
 });

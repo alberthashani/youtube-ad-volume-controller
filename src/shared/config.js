@@ -1,5 +1,8 @@
 // Configuration constants for the YouTube Ad Volume Controller
 const CONFIG = {
+  // Debug settings
+  DEBUG_MODE: false, // Master switch for debug features (logging and debug panel)
+  
   // Volume settings
   DEFAULT_AD_VOLUME: 0.05, // 5% volume for ads
   VOLUME_CHANGE_THRESHOLD: 0.01, // Minimum volume change to register
@@ -28,9 +31,9 @@ const CONFIG = {
     AD_INTERRUPTING: 'ad-interrupting' // Interruptive ad (skippable/non-skippable)
   },
   
-  // Developer panel configuration
-  DEV_PANEL: {
-    ID: 'yt-volume-control-dev-panel',
+  // Debug panel configuration
+  DEBUG_PANEL: {
+    ID: 'yt-volume-control-debug-panel',
     TOGGLE_SHORTCUT: { ctrl: true, shift: true, key: 'D' }, // Ctrl+Shift+D
     STYLES: `
       position: fixed;

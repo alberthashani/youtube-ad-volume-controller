@@ -16,7 +16,8 @@ class VolumeManager {
   loadAdVolumeFromStorage() {
     chrome.storage.sync.get([CONFIG.STORAGE_KEYS.AD_VOLUME], (result) => {
       if (result.adVolume !== undefined) {
-        this.adVolume = result.adVolume;
+        // Ensure adVolume is always a number
+        this.adVolume = parseFloat(result.adVolume);
       }
     });
   }
@@ -26,12 +27,13 @@ class VolumeManager {
    * @param {number} volume - Volume level (0.0 to 1.0)
    */
   setAdVolume(volume) {
-    this.adVolume = volume;
-    chrome.storage.sync.set({ [CONFIG.STORAGE_KEYS.AD_VOLUME]: volume });
+    // Ensure volume is always a number
+    this.adVolume = parseFloat(volume);
+    chrome.storage.sync.set({ [CONFIG.STORAGE_KEYS.AD_VOLUME]: this.adVolume });
     
     const videoPlayer = utils.getCurrentVideoElement();
     if (videoPlayer && window.adDetector?.isAdPlaying()) {
-      utils.setVolume(videoPlayer, volume);
+      utils.setVolume(videoPlayer, this.adVolume);
     }
   }
 
@@ -103,6 +105,22 @@ class VolumeManager {
    */
   hasVolumeStateSaved() {
     return this.savedVolume !== null;
+  }
+
+  /**
+   * Get saved muted state for logging purposes
+   * @returns {boolean|null}
+   */
+  getSavedMuted() {
+    return this.savedMuted;
+  }
+
+  /**
+   * Get last known user volume for logging purposes
+   * @returns {number|null}
+   */
+  getLastKnownUserVolume() {
+    return this.lastKnownUserVolume;
   }
 
   /**
